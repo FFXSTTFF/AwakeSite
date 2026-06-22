@@ -45,9 +45,38 @@
       "4": "Leader"
     }
   },
+  "tickets": {
+    "title": "Tickets",
+    "new": "Submit Ticket",
+    "gameNickname": "In-game nickname",
+    "description": "Description",
+    "type": "Type",
+    "types": {
+      "0": "Recruitment Application",
+      "1": "Appeal"
+    },
+    "status": "Status",
+    "statuses": {
+      "0": "Pending",
+      "1": "In Review",
+      "2": "Approved",
+      "3": "Rejected"
+    },
+    "author": "Author",
+    "createdAt": "Created",
+    "comments": "Comments",
+    "addComment": "Add comment",
+    "commentContent": "Comment text",
+    "changeStatus": "Change status",
+    "noTickets": "No tickets",
+    "submit": "Submit",
+    "playerData": "Player data",
+    "noPlayerData": "No data found"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "squads": "Squads",
+    "tickets": "Tickets",
     "manage": "Manage",
     "settings": "Settings",
     "logout": "Log out"

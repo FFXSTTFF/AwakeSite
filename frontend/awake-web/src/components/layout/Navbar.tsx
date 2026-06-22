@@ -29,6 +29,7 @@ export function Navbar() {
   const navLinks = [
     { to: '/dashboard' as const, label: t('nav.dashboard') },
     { to: '/squads' as const, label: t('nav.squads') },
+    { to: '/tickets' as const, label: t('nav.tickets') },
     { to: '/settings' as const, label: t('nav.settings') },
   ]
 

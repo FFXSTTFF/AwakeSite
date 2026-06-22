@@ -50,3 +50,41 @@ export interface UserDto {
   rank: UserRank
   createdAt: string
 }
+
+export const TicketStatus = {
+  Pending: 0,
+  InReview: 1,
+  Approved: 2,
+  Rejected: 3,
+} as const
+export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
+
+export const TicketType = {
+  Recruitment: 0,
+  Appeal: 1,
+} as const
+export type TicketType = (typeof TicketType)[keyof typeof TicketType]
+
+export interface TicketCommentDto {
+  id: string
+  authorUsername: string
+  content: string
+  createdAt: string
+}
+
+export interface TicketListItemDto {
+  id: string
+  type: TicketType
+  status: TicketStatus
+  gameNickname: string
+  authorUsername: string
+  createdAt: string
+}
+
+export interface TicketDetailDto extends TicketListItemDto {
+  description: string
+  reviewedAt: string | null
+  reviewedByUsername: string | null
+  comments: TicketCommentDto[]
+  playerData: unknown | null
+}
