@@ -5,6 +5,7 @@ namespace Awake.Application.Common.Interfaces.Repositories;
 public interface ITicketRepository
 {
     Task<Ticket?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<Ticket?> GetByIdWithDetailsAsync(Guid id, CancellationToken ct = default);
     Task<IReadOnlyList<Ticket>> GetAllAsync(CancellationToken ct = default);
     Task<IReadOnlyList<Ticket>> GetByAuthorAsync(Guid authorId, CancellationToken ct = default);
     Task AddAsync(Ticket ticket, CancellationToken ct = default);
