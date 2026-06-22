@@ -16,5 +16,46 @@
       "usernameTaken": "Имя пользователя уже занято",
       "networkError": "Ошибка сети"
     }
+  },
+  "squads": {
+    "title": "Отряды",
+    "squad": "Отряд",
+    "members": "Участники",
+    "leader": "Лидер",
+    "noMembers": "Нет участников",
+    "addMember": "Добавить участника",
+    "removeMember": "Убрать из отряда",
+    "setLeader": "Назначить лидером",
+    "memberCount": "{{count}} / 5",
+    "joinedAt": "Вступил",
+    "more": "+{{count}} ещё"
+  },
+  "users": {
+    "title": "Пользователи",
+    "username": "Логин",
+    "rank": "Ранг",
+    "email": "Email",
+    "changeRank": "Изменить ранг",
+    "rankChanged": "Ранг изменён",
+    "ranks": {
+      "0": "Гость",
+      "1": "Участник",
+      "2": "Офицер",
+      "3": "Полковник",
+      "4": "Лидер"
+    }
+  },
+  "nav": {
+    "dashboard": "Панель",
+    "squads": "Отряды",
+    "manage": "Управление",
+    "settings": "Настройки",
+    "logout": "Выйти"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "notFound": "Не найдено",
+    "save": "Сохранить",
+    "cancel": "Отмена"
   }
 }

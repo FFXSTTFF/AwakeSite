@@ -25,3 +25,28 @@ export interface RegisterResponse {
   userId: string
   username: string
 }
+
+export interface SquadMemberDto {
+  userId: string
+  username: string
+  gameNickname: string | null
+  isLeader: boolean
+  joinedAt: string
+}
+
+export interface SquadDto {
+  id: string
+  name: string
+  number: number
+  members: SquadMemberDto[]
+  memberCount: number
+}
+
+export interface UserDto {
+  id: string
+  username: string
+  email: string | null
+  gameNickname: string | null
+  rank: UserRank
+  createdAt: string
+}
