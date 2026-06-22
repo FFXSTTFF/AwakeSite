@@ -1,23 +1,19 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/authStore'
-import type { UserRank } from '@/types/api'
-import { UserRank as Rank } from '@/types/api'
+import { UserRank } from '@/types/api'
 
-const rankNames: Record<UserRank, string> = {
-  [Rank.Guest]: 'Guest',
-  [Rank.Member]: 'Member',
-  [Rank.Officer]: 'Officer',
-  [Rank.Colonel]: 'Colonel',
-  [Rank.Leader]: 'Leader',
+const rankNames: Record<number, string> = {
+  [UserRank.Guest]: 'Guest',
+  [UserRank.Member]: 'Member',
+  [UserRank.Officer]: 'Officer',
+  [UserRank.Colonel]: 'Colonel',
+  [UserRank.Leader]: 'Leader',
 }
 
-const navLinks = [
-  { to: '/dashboard' as const, label: 'Dashboard' },
-  { to: '/settings' as const, label: 'Настройки' },
-]
-
 export function Navbar() {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
@@ -27,6 +23,14 @@ export function Navbar() {
     logout()
     void navigate({ to: '/login' })
   }
+
+  const isColonelPlus = (user?.rank ?? 0) >= UserRank.Colonel
+
+  const navLinks = [
+    { to: '/dashboard' as const, label: t('nav.dashboard') },
+    { to: '/squads' as const, label: t('nav.squads') },
+    { to: '/settings' as const, label: t('nav.settings') },
+  ]
 
   return (
     <nav className="bg-bg-card border-b border-border">
@@ -48,6 +52,15 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          {isColonelPlus && (
+            <Link
+              to="/manage/users"
+              className="text-text-muted hover:text-text-primary transition-colors"
+              activeProps={{ className: 'text-accent hover:text-accent' }}
+            >
+              {t('nav.manage')}
+            </Link>
+          )}
         </div>
 
         {/* Right: user info + logout */}
@@ -64,7 +77,7 @@ export function Navbar() {
             onClick={handleLogout}
             className="text-sm text-text-muted hover:text-text-primary transition-colors"
           >
-            Выйти
+            {t('nav.logout')}
           </button>
         </div>
 
@@ -92,6 +105,16 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          {isColonelPlus && (
+            <Link
+              to="/manage/users"
+              className="text-text-muted hover:text-text-primary transition-colors"
+              activeProps={{ className: 'text-accent hover:text-accent' }}
+              onClick={() => setMenuOpen(false)}
+            >
+              {t('nav.manage')}
+            </Link>
+          )}
           <div className="flex items-center gap-3 pt-2 border-t border-border">
             {user && (
               <>
@@ -105,7 +128,7 @@ export function Navbar() {
               onClick={handleLogout}
               className="text-sm text-text-muted hover:text-text-primary transition-colors"
             >
-              Выйти
+              {t('nav.logout')}
             </button>
           </div>
         </div>

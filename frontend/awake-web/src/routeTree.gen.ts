@@ -13,8 +13,11 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthSquadsRouteImport } from './routes/_auth.squads'
 import { Route as AuthSettingsRouteImport } from './routes/_auth.settings'
 import { Route as AuthDashboardRouteImport } from './routes/_auth.dashboard'
+import { Route as AuthSquadsSquadIdRouteImport } from './routes/_auth.squads.$squadId'
+import { Route as AuthManageUsersRouteImport } from './routes/_auth.manage.users'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -35,6 +38,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthSquadsRoute = AuthSquadsRouteImport.update({
+  id: '/squads',
+  path: '/squads',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthSettingsRoute = AuthSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -45,6 +53,16 @@ const AuthDashboardRoute = AuthDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthSquadsSquadIdRoute = AuthSquadsSquadIdRouteImport.update({
+  id: '/$squadId',
+  path: '/$squadId',
+  getParentRoute: () => AuthSquadsRoute,
+} as any)
+const AuthManageUsersRoute = AuthManageUsersRouteImport.update({
+  id: '/manage/users',
+  path: '/manage/users',
+  getParentRoute: () => AuthRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -52,6 +70,9 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/dashboard': typeof AuthDashboardRoute
   '/settings': typeof AuthSettingsRoute
+  '/squads': typeof AuthSquadsRouteWithChildren
+  '/manage/users': typeof AuthManageUsersRoute
+  '/squads/$squadId': typeof AuthSquadsSquadIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -59,6 +80,9 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/dashboard': typeof AuthDashboardRoute
   '/settings': typeof AuthSettingsRoute
+  '/squads': typeof AuthSquadsRouteWithChildren
+  '/manage/users': typeof AuthManageUsersRoute
+  '/squads/$squadId': typeof AuthSquadsSquadIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,12 +92,31 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_auth/dashboard': typeof AuthDashboardRoute
   '/_auth/settings': typeof AuthSettingsRoute
+  '/_auth/squads': typeof AuthSquadsRouteWithChildren
+  '/_auth/manage/users': typeof AuthManageUsersRoute
+  '/_auth/squads/$squadId': typeof AuthSquadsSquadIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register' | '/dashboard' | '/settings'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/dashboard'
+    | '/settings'
+    | '/squads'
+    | '/manage/users'
+    | '/squads/$squadId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/register' | '/dashboard' | '/settings'
+  to:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/dashboard'
+    | '/settings'
+    | '/squads'
+    | '/manage/users'
+    | '/squads/$squadId'
   id:
     | '__root__'
     | '/'
@@ -82,6 +125,9 @@ export interface FileRouteTypes {
     | '/register'
     | '/_auth/dashboard'
     | '/_auth/settings'
+    | '/_auth/squads'
+    | '/_auth/manage/users'
+    | '/_auth/squads/$squadId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -121,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth/squads': {
+      id: '/_auth/squads'
+      path: '/squads'
+      fullPath: '/squads'
+      preLoaderRoute: typeof AuthSquadsRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/settings': {
       id: '/_auth/settings'
       path: '/settings'
@@ -135,17 +188,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/squads/$squadId': {
+      id: '/_auth/squads/$squadId'
+      path: '/$squadId'
+      fullPath: '/squads/$squadId'
+      preLoaderRoute: typeof AuthSquadsSquadIdRouteImport
+      parentRoute: typeof AuthSquadsRoute
+    }
+    '/_auth/manage/users': {
+      id: '/_auth/manage/users'
+      path: '/manage/users'
+      fullPath: '/manage/users'
+      preLoaderRoute: typeof AuthManageUsersRouteImport
+      parentRoute: typeof AuthRoute
+    }
   }
 }
+
+interface AuthSquadsRouteChildren {
+  AuthSquadsSquadIdRoute: typeof AuthSquadsSquadIdRoute
+}
+
+const AuthSquadsRouteChildren: AuthSquadsRouteChildren = {
+  AuthSquadsSquadIdRoute: AuthSquadsSquadIdRoute,
+}
+
+const AuthSquadsRouteWithChildren = AuthSquadsRoute._addFileChildren(
+  AuthSquadsRouteChildren,
+)
 
 interface AuthRouteChildren {
   AuthDashboardRoute: typeof AuthDashboardRoute
   AuthSettingsRoute: typeof AuthSettingsRoute
+  AuthSquadsRoute: typeof AuthSquadsRouteWithChildren
+  AuthManageUsersRoute: typeof AuthManageUsersRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthDashboardRoute: AuthDashboardRoute,
   AuthSettingsRoute: AuthSettingsRoute,
+  AuthSquadsRoute: AuthSquadsRouteWithChildren,
+  AuthManageUsersRoute: AuthManageUsersRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
