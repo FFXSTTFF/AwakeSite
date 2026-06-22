@@ -8,6 +8,11 @@ namespace Awake.API.Middleware;
 
 public class GlobalExceptionMiddleware(RequestDelegate next)
 {
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -41,7 +46,7 @@ public class GlobalExceptionMiddleware(RequestDelegate next)
                 errors
             };
 
-            await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(problem, _jsonOptions));
         }
         catch (DomainException ex)
         {
@@ -67,6 +72,6 @@ public class GlobalExceptionMiddleware(RequestDelegate next)
             Detail = detail
         };
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
+        await context.Response.WriteAsync(JsonSerializer.Serialize(problem, _jsonOptions));
     }
 }

@@ -22,8 +22,8 @@ public class AuthController(ISender sender, ITokenService tokenService) : Contro
         var result = await sender.Send(command, ct);
 
         return result.IsSuccess
-            ? CreatedAtAction(nameof(Register), result.Value)
-            : BadRequest(result.Error);
+            ? Created(string.Empty, result.Value)
+            : Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
     }
 
     [HttpPost("login")]
@@ -33,7 +33,7 @@ public class AuthController(ISender sender, ITokenService tokenService) : Contro
         var result = await sender.Send(command, ct);
 
         if (!result.IsSuccess)
-            return BadRequest(result.Error);
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
 
         var refreshToken = tokenService.GenerateRefreshToken();
 
