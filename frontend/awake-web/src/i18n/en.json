@@ -16,5 +16,45 @@
       "usernameTaken": "Username is already taken",
       "networkError": "Network error"
     }
+  },
+  "squads": {
+    "title": "Squads",
+    "squad": "Squad",
+    "members": "Members",
+    "leader": "Leader",
+    "noMembers": "No members",
+    "addMember": "Add member",
+    "removeMember": "Remove from squad",
+    "setLeader": "Set as leader",
+    "memberCount": "{{count}} / 5",
+    "joinedAt": "Joined"
+  },
+  "users": {
+    "title": "Users",
+    "username": "Username",
+    "rank": "Rank",
+    "email": "Email",
+    "changeRank": "Change rank",
+    "rankChanged": "Rank changed",
+    "ranks": {
+      "0": "Guest",
+      "1": "Member",
+      "2": "Officer",
+      "3": "Colonel",
+      "4": "Leader"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "squads": "Squads",
+    "manage": "Manage",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "common": {
+    "loading": "Loading...",
+    "notFound": "Not found",
+    "save": "Save",
+    "cancel": "Cancel"
   }
 }
