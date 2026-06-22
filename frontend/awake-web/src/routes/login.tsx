@@ -39,7 +39,7 @@ function LoginPage() {
     try {
       const res = await authApi.login({ username, password })
       login(
-        { userId: '', username: res.username, rank: res.rank },
+        { userId: res.userId, username: res.username, rank: res.rank },
         res.accessToken,
       )
       await navigate({ to: '/dashboard' })

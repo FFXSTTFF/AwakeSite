@@ -18,6 +18,7 @@ export interface LoginResponse {
   accessToken: string
   username: string
   rank: UserRank
+  userId: string
 }
 
 export interface RegisterResponse {

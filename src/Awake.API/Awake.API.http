@@ -1,6 +1,21 @@
-@Awake.API_HostAddress = http://localhost:5153
+@Awake.API_HostAddress = http://localhost:5000
 
-GET {{Awake.API_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{Awake.API_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
+
+###
+
+POST {{Awake.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
 
 ###

@@ -25,6 +25,6 @@ public class LoginCommandHandler(
 
         var accessToken = tokenService.GenerateAccessToken(user);
 
-        return Result<LoginResponse>.Success(new LoginResponse(accessToken, user.Username, user.Rank));
+        return Result<LoginResponse>.Success(new LoginResponse(accessToken, user.Username, user.Rank, user.Id.ToString()));
     }
 }
