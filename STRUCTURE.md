@@ -7,7 +7,7 @@
 ## Солюшен
 
 ```
-Awake.sln
+Awake.slnx
 ├── src/
 │   ├── Awake.Domain/
 │   ├── Awake.Application/

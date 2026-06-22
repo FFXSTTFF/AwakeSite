@@ -1,0 +1,21 @@
+@Awake.API_HostAddress = http://localhost:5000
+
+POST {{Awake.API_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
+
+###
+
+POST {{Awake.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
+
+###

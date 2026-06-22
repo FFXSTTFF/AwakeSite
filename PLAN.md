@@ -31,7 +31,7 @@
 ### Схема взаимодействия
 
 ```
-[Next.js frontend] ──HTTP──▶ [ASP.NET Core API] ──▶ [PostgreSQL]
+[React + Vite frontend] ──HTTP──▶ [ASP.NET Core API] ──▶ [PostgreSQL]
                                      │
                                      ├──▶ [Discord Webhook]
                                      └──▶ [Внешние сайты верификации]
@@ -40,7 +40,7 @@
 ### Структура проекта (Clean Architecture)
 
 ```
-Awake.sln
+Awake.slnx
 ├── src/
 │   ├── Awake.Domain/          — Entities, Enums, Domain Exceptions
 │   ├── Awake.Application/     — Use Cases, Commands, Queries, Interfaces, DTOs
@@ -174,25 +174,24 @@ SquadMember {
 - **Тёмная тема по умолчанию** (Static palette: #0e0e0f фон, #3ddc84 акцент)
 - Светлая тема — переключается пользователем, сохраняется в localStorage
 - **Русский язык по умолчанию**
-- Английский — дополнительно (i18n через next-intl)
+- Английский — дополнительно (i18next)
 
 ---
 
-## Структура маршрутов (Next.js)
+## Структура маршрутов (TanStack Router)
 
 ```
-/                         — лендинг / вход
-/auth/register            — регистрация
-/auth/login               — вход
+/                         — лендинг / вход (redirect → /login или /dashboard)
+/login                    — вход
+/register                 — регистрация
 /dashboard                — главная (по рангу)
 /squads                   — список отрядов
-/squads/[id]              — страница отряда
+/squads/$id               — страница отряда
 /tickets                  — мои тикеты (guest) / все тикеты (officer+)
 /tickets/new              — подать тикет
-/tickets/[id]             — просмотр / рассмотрение тикета
+/tickets/$id              — просмотр / рассмотрение тикета
 /stats                    — статистика клана
-/stats/[username]         — статистика игрока
-/manage                   — панель управления (officer+)
+/stats/$username          — статистика игрока
 /manage/users             — управление пользователями и рангами (colonel+)
 /manage/squads            — управление отрядами (colonel+)
 /settings                 — настройки аккаунта (тема, язык)
@@ -288,7 +287,7 @@ Request
 
 ```
 railway/
-  ├── frontend   (Next.js)        → stalcraftclans.cc
+  ├── frontend   (React + Vite)    → stalcraftclans.cc
   ├── backend    (ASP.NET Core)   → api.stalcraftclans.cc
   └── postgres   (PostgreSQL)     → internal Railway network
 ```
@@ -302,7 +301,7 @@ railway/
 ## Этапы разработки
 
 ### Этап 1 — Фундамент
-- [ ] Инициализация проекта: ASP.NET Core Web API + Next.js
+- [ ] Инициализация проекта: ASP.NET Core Web API + React + Vite
 - [ ] Схема БД + Entity Framework миграции (User, Squad, SquadMember, Ticket)
 - [ ] ASP.NET Identity + JWT аутентификация
 - [ ] Базовый фронт: вход, регистрация, layout с навигацией
@@ -324,7 +323,7 @@ railway/
 
 ### Этап 5 — UX и локализация
 - [ ] Тёмная / светлая тема (переключатель)
-- [ ] Русский + английский (next-intl)
+- [ ] Русский + английский (i18next)
 - [ ] Мобильная адаптация (responsive)
 
 ### Этап 6 — Безопасность и деплой

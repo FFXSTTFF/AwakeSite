@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Awake.API/Awake.API.csproj" />
+    <Project Path="src/Awake.Application/Awake.Application.csproj" />
+    <Project Path="src/Awake.Domain/Awake.Domain.csproj" />
+    <Project Path="src/Awake.Infrastructure/Awake.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Awake.Integration.Tests/Awake.Integration.Tests.csproj" />
+    <Project Path="tests/Awake.Unit.Tests/Awake.Unit.Tests.csproj" />
+  </Folder>
+</Solution>
