@@ -22,6 +22,6 @@ public class TicketCommentConfiguration : IEntityTypeConfiguration<TicketComment
 
         builder.Property(x => x.Content)
             .IsRequired()
-            .HasMaxLength(1000);
+            .HasMaxLength(2000);
     }
 }
