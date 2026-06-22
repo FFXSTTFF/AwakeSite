@@ -1,10 +1,15 @@
-import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { AuthState } from '@/store/authStore'
 import '@/i18n'
 
 const queryClient = new QueryClient()
 
-export const Route = createRootRoute({
+interface RouterContext {
+  auth: AuthState
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: () => (
     <QueryClientProvider client={queryClient}>
       <Outlet />

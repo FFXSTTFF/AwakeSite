@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { CurrentUser } from '@/types/api'
 
-interface AuthState {
+export interface AuthState {
   accessToken: string | null
   user: CurrentUser | null
   isAuthenticated: boolean
