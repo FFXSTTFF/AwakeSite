@@ -1,0 +1,20 @@
+{
+  "auth": {
+    "login": "Войти",
+    "register": "Регистрация",
+    "username": "Имя пользователя",
+    "password": "Пароль",
+    "email": "Email (необязательно)",
+    "loginButton": "Войти",
+    "registerButton": "Зарегистрироваться",
+    "noAccount": "Нет аккаунта?",
+    "hasAccount": "Уже есть аккаунт?",
+    "switchToRegister": "Создать аккаунт",
+    "switchToLogin": "Войти",
+    "errors": {
+      "invalidCredentials": "Неверный логин или пароль",
+      "usernameTaken": "Имя пользователя уже занято",
+      "networkError": "Ошибка сети"
+    }
+  }
+}

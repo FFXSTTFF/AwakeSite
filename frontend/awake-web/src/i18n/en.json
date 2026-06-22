@@ -1,0 +1,20 @@
+{
+  "auth": {
+    "login": "Sign In",
+    "register": "Register",
+    "username": "Username",
+    "password": "Password",
+    "email": "Email (optional)",
+    "loginButton": "Sign In",
+    "registerButton": "Create Account",
+    "noAccount": "No account?",
+    "hasAccount": "Already have an account?",
+    "switchToRegister": "Create account",
+    "switchToLogin": "Sign in",
+    "errors": {
+      "invalidCredentials": "Invalid username or password",
+      "usernameTaken": "Username is already taken",
+      "networkError": "Network error"
+    }
+  }
+}
