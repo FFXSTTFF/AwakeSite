@@ -41,9 +41,11 @@ public class TicketsController(ISender sender) : ControllerBase
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new GetTicketByIdQuery(id), ct);
-        return result.IsSuccess
-            ? Ok(result.Value)
-            : Problem(detail: result.Error, statusCode: StatusCodes.Status403Forbidden);
+        if (!result.IsSuccess)
+            return result.Error == "Тикет не найден."
+                ? NotFound()
+                : Problem(detail: result.Error, statusCode: StatusCodes.Status403Forbidden);
+        return Ok(result.Value);
     }
 
     [HttpPut("{id:guid}/status")]

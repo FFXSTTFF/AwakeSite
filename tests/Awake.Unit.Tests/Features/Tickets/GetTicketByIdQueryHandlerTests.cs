@@ -12,8 +12,12 @@ namespace Awake.Unit.Tests.Features.Tickets;
 public class GetTicketByIdQueryHandlerTests
 {
     private readonly Mock<ITicketRepository> _repo = new();
+    private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<ICurrentUserService> _currentUser = new();
     private readonly Mock<IPlayerDataAggregator> _playerData = new();
+
+    private GetTicketByIdQueryHandler BuildHandler() =>
+        new(_repo.Object, _userRepo.Object, _currentUser.Object, _playerData.Object);
 
     private Ticket MakeTicket(Guid authorId, string authorName = "alice")
     {
@@ -37,8 +41,7 @@ public class GetTicketByIdQueryHandlerTests
         _currentUser.Setup(s => s.UserId).Returns(userId);
         _currentUser.Setup(s => s.Rank).Returns(UserRank.Member);
 
-        var handler = new GetTicketByIdQueryHandler(_repo.Object, _currentUser.Object, _playerData.Object);
-        var result = await handler.Handle(new GetTicketByIdQuery(ticket.Id), CancellationToken.None);
+        var result = await BuildHandler().Handle(new GetTicketByIdQuery(ticket.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.GameNickname.Should().Be("AliceGame");
@@ -60,12 +63,35 @@ public class GetTicketByIdQueryHandlerTests
         _playerData.Setup(p => p.GetPlayerDataAsync("AliceGame", It.IsAny<CancellationToken>()))
                    .ReturnsAsync(playerResult);
 
-        var handler = new GetTicketByIdQueryHandler(_repo.Object, _currentUser.Object, _playerData.Object);
-        var result = await handler.Handle(new GetTicketByIdQuery(ticket.Id), CancellationToken.None);
+        var result = await BuildHandler().Handle(new GetTicketByIdQuery(ticket.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.PlayerData.Should().NotBeNull();
         _playerData.Verify(p => p.GetPlayerDataAsync("AliceGame", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_OfficerGetsReviewedByUsername_WhenTicketReviewed()
+    {
+        var authorId = Guid.NewGuid();
+        var officerId = Guid.NewGuid();
+        var ticket = MakeTicket(authorId);
+        ticket.Status = TicketStatus.Approved;
+        ticket.ReviewedBy = officerId;
+        ticket.ReviewedAt = DateTime.UtcNow;
+        var officerUser = new User { Id = officerId, Username = "bob" };
+
+        _repo.Setup(r => r.GetByIdWithDetailsAsync(ticket.Id, It.IsAny<CancellationToken>()))
+             .ReturnsAsync(ticket);
+        _currentUser.Setup(s => s.UserId).Returns(officerId);
+        _currentUser.Setup(s => s.Rank).Returns(UserRank.Officer);
+        _userRepo.Setup(r => r.GetByIdAsync(officerId, It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(officerUser);
+
+        var result = await BuildHandler().Handle(new GetTicketByIdQuery(ticket.Id), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.ReviewedByUsername.Should().Be("bob");
     }
 
     [Fact]
@@ -80,8 +106,7 @@ public class GetTicketByIdQueryHandlerTests
         _currentUser.Setup(s => s.UserId).Returns(otherId);
         _currentUser.Setup(s => s.Rank).Returns(UserRank.Member);
 
-        var handler = new GetTicketByIdQueryHandler(_repo.Object, _currentUser.Object, _playerData.Object);
-        var result = await handler.Handle(new GetTicketByIdQuery(ticket.Id), CancellationToken.None);
+        var result = await BuildHandler().Handle(new GetTicketByIdQuery(ticket.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
     }
@@ -95,8 +120,7 @@ public class GetTicketByIdQueryHandlerTests
         _currentUser.Setup(s => s.UserId).Returns(Guid.NewGuid());
         _currentUser.Setup(s => s.Rank).Returns(UserRank.Member);
 
-        var handler = new GetTicketByIdQueryHandler(_repo.Object, _currentUser.Object, _playerData.Object);
-        var result = await handler.Handle(new GetTicketByIdQuery(ticketId), CancellationToken.None);
+        var result = await BuildHandler().Handle(new GetTicketByIdQuery(ticketId), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
     }

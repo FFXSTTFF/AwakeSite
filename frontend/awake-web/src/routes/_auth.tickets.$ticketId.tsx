@@ -31,7 +31,7 @@ function TicketDetailPage() {
   const isOfficerPlus = (currentUser?.rank ?? 0) >= UserRank.Officer
 
   const [commentText, setCommentText] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState<number | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState<TicketStatus | null>(null)
 
   const { data: ticket, isLoading } = useQuery({
     queryKey: ['tickets', ticketId],
@@ -39,7 +39,7 @@ function TicketDetailPage() {
   })
 
   const updateStatus = useMutation({
-    mutationFn: (newStatus: number) => ticketsApi.updateStatus(ticketId, newStatus),
+    mutationFn: (newStatus: TicketStatus) => ticketsApi.updateStatus(ticketId, newStatus),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tickets', ticketId] })
       void queryClient.invalidateQueries({ queryKey: ['tickets'] })
@@ -91,7 +91,7 @@ function TicketDetailPage() {
           <div className="flex items-center gap-3">
             <select
               value={selectedStatus ?? ticket.status}
-              onChange={(e) => setSelectedStatus(Number(e.target.value))}
+              onChange={(e) => setSelectedStatus(Number(e.target.value) as TicketStatus)}
               className="bg-bg-page border border-border rounded px-3 py-1.5 text-text-primary text-sm focus:outline-none focus:border-accent"
             >
               {STATUS_OPTIONS.map((s) => (

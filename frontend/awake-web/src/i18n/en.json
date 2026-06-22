@@ -70,6 +70,7 @@
     "changeStatus": "Change status",
     "noTickets": "No tickets",
     "submit": "Submit",
+    "createError": "Failed to submit ticket. Please check your input.",
     "playerData": "Player data",
     "noPlayerData": "No data found"
   },

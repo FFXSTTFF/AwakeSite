@@ -25,7 +25,7 @@ function NewTicketPage() {
       void queryClient.invalidateQueries({ queryKey: ['tickets'] })
       void navigate({ to: '/tickets' })
     },
-    onError: () => setError('Ошибка при создании тикета. Проверьте введённые данные.'),
+    onError: () => setError(t('tickets.createError')),
   })
 
   const handleSubmit = (e: React.FormEvent) => {

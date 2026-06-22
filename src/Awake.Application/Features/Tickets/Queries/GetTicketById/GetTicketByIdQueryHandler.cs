@@ -9,6 +9,7 @@ namespace Awake.Application.Features.Tickets.Queries.GetTicketById;
 
 public class GetTicketByIdQueryHandler(
     ITicketRepository ticketRepository,
+    IUserRepository userRepository,
     ICurrentUserService currentUserService,
     IPlayerDataAggregator playerDataAggregator
 ) : IRequestHandler<GetTicketByIdQuery, Result<TicketDetailDto>>
@@ -33,6 +34,13 @@ public class GetTicketByIdQueryHandler(
             playerData = pd;
         }
 
+        string? reviewedByUsername = null;
+        if (ticket.ReviewedBy.HasValue)
+        {
+            var reviewer = await userRepository.GetByIdAsync(ticket.ReviewedBy.Value, cancellationToken);
+            reviewedByUsername = reviewer?.Username;
+        }
+
         var comments = ticket.Comments
             .OrderBy(c => c.CreatedAt)
             .Select(c => new TicketCommentDto(c.Id, c.Author.Username, c.Content, c.CreatedAt))
@@ -41,7 +49,7 @@ public class GetTicketByIdQueryHandler(
         var dto = new TicketDetailDto(
             ticket.Id, ticket.Type, ticket.Status, ticket.GameNickname,
             ticket.Author.Username, ticket.Description, ticket.CreatedAt,
-            ticket.ReviewedAt, null,
+            ticket.ReviewedAt, reviewedByUsername,
             comments, playerData);
 
         return Result<TicketDetailDto>.Success(dto);
