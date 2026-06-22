@@ -1,6 +1,9 @@
 using Awake.Application.Common.Interfaces;
+using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Features.Auth.Commands.Login;
+using Awake.Application.Features.Auth.Commands.Refresh;
 using Awake.Application.Features.Auth.Commands.Register;
+using Awake.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -13,7 +16,11 @@ public record LoginRequest(string Username, string Password);
 [ApiController]
 [Route("api/auth")]
 [EnableRateLimiting("auth")]
-public class AuthController(ISender sender, ITokenService tokenService) : ControllerBase
+public class AuthController(
+    ISender sender,
+    ITokenService tokenService,
+    IRefreshTokenRepository refreshTokenRepository
+) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken ct)
@@ -35,9 +42,16 @@ public class AuthController(ISender sender, ITokenService tokenService) : Contro
         if (!result.IsSuccess)
             return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
 
-        var refreshToken = tokenService.GenerateRefreshToken();
+        var rawToken = tokenService.GenerateRefreshToken();
 
-        Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
+        await refreshTokenRepository.AddAsync(new RefreshToken
+        {
+            UserId = Guid.Parse(result.Value!.UserId),
+            Token = rawToken,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+        }, ct);
+
+        Response.Cookies.Append("refreshToken", rawToken, new CookieOptions
         {
             HttpOnly = true,
             Secure = true,
@@ -50,8 +64,35 @@ public class AuthController(ISender sender, ITokenService tokenService) : Contro
     }
 
     [HttpPost("refresh")]
-    public IActionResult Refresh()
+    public async Task<IActionResult> Refresh(CancellationToken ct)
     {
-        return StatusCode(StatusCodes.Status501NotImplemented);
+        var token = Request.Cookies["refreshToken"];
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized();
+
+        var command = new RefreshCommand(token);
+        var result = await sender.Send(command, ct);
+
+        if (!result.IsSuccess)
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status401Unauthorized);
+
+        var newRawToken = tokenService.GenerateRefreshToken();
+        await refreshTokenRepository.AddAsync(new RefreshToken
+        {
+            UserId = Guid.Parse(result.Value!.UserId),
+            Token = newRawToken,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+        }, ct);
+
+        Response.Cookies.Append("refreshToken", newRawToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/auth/refresh",
+            MaxAge = TimeSpan.FromDays(7)
+        });
+
+        return Ok(result.Value);
     }
 }
