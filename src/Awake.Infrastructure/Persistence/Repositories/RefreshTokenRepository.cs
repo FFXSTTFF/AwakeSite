@@ -25,4 +25,14 @@ public class RefreshTokenRepository(AppDbContext context) : IRefreshTokenReposit
             await context.SaveChangesAsync(ct);
         }
     }
+
+    public async Task RevokeAndAddAsync(string oldToken, RefreshToken newToken, CancellationToken ct = default)
+    {
+        var stored = await context.RefreshTokens.FirstOrDefaultAsync(r => r.Token == oldToken, ct);
+        if (stored is not null)
+            stored.IsRevoked = true;
+
+        await context.RefreshTokens.AddAsync(newToken, ct);
+        await context.SaveChangesAsync(ct);
+    }
 }

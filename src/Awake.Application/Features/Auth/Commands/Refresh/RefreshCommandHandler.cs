@@ -1,6 +1,7 @@
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Common.Models;
+using Awake.Domain.Entities;
 using MediatR;
 
 namespace Awake.Application.Features.Auth.Commands.Refresh;
@@ -24,10 +25,18 @@ public class RefreshCommandHandler(
         if (user is null)
             return Result<RefreshResponse>.Failure("Пользователь не найден.");
 
-        await refreshTokenRepository.RevokeAsync(request.RefreshToken, cancellationToken);
+        var newRawToken = tokenService.GenerateRefreshToken();
+        var newRefreshToken = new RefreshToken
+        {
+            UserId = user.Id,
+            Token = newRawToken,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+        };
+
+        await refreshTokenRepository.RevokeAndAddAsync(request.RefreshToken, newRefreshToken, cancellationToken);
 
         var newAccessToken = tokenService.GenerateAccessToken(user);
         return Result<RefreshResponse>.Success(
-            new RefreshResponse(newAccessToken, user.Username, user.Rank, user.Id.ToString()));
+            new RefreshResponse(newAccessToken, user.Username, user.Rank, user.Id.ToString(), newRawToken));
     }
 }

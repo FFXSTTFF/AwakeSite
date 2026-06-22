@@ -27,7 +27,8 @@
     "removeMember": "Remove from squad",
     "setLeader": "Set as leader",
     "memberCount": "{{count}} / 5",
-    "joinedAt": "Joined"
+    "joinedAt": "Joined",
+    "more": "+{{count}} more"
   },
   "users": {
     "title": "Users",

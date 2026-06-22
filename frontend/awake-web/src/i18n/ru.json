@@ -27,7 +27,8 @@
     "removeMember": "Убрать из отряда",
     "setLeader": "Назначить лидером",
     "memberCount": "{{count}} / 5",
-    "joinedAt": "Вступил"
+    "joinedAt": "Вступил",
+    "more": "+{{count}} ещё"
   },
   "users": {
     "title": "Пользователи",

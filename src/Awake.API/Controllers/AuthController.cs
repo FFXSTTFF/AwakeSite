@@ -76,15 +76,7 @@ public class AuthController(
         if (!result.IsSuccess)
             return Problem(detail: result.Error, statusCode: StatusCodes.Status401Unauthorized);
 
-        var newRawToken = tokenService.GenerateRefreshToken();
-        await refreshTokenRepository.AddAsync(new RefreshToken
-        {
-            UserId = Guid.Parse(result.Value!.UserId),
-            Token = newRawToken,
-            ExpiresAt = DateTime.UtcNow.AddDays(7),
-        }, ct);
-
-        Response.Cookies.Append("refreshToken", newRawToken, new CookieOptions
+        Response.Cookies.Append("refreshToken", result.Value!.NewRefreshToken, new CookieOptions
         {
             HttpOnly = true,
             Secure = true,
@@ -93,6 +85,12 @@ public class AuthController(
             MaxAge = TimeSpan.FromDays(7)
         });
 
-        return Ok(result.Value);
+        return Ok(new
+        {
+            result.Value.AccessToken,
+            result.Value.Username,
+            result.Value.Rank,
+            result.Value.UserId,
+        });
     }
 }

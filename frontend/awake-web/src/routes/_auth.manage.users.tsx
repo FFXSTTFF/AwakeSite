@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
@@ -7,16 +7,15 @@ import { UserRank } from '@/types/api'
 import { useAuthStore } from '@/store/authStore'
 
 export const Route = createFileRoute('/_auth/manage/users')({
+  beforeLoad: ({ context }) => {
+    if ((context.auth.user?.rank ?? 0) < UserRank.Colonel) {
+      throw redirect({ to: '/dashboard' })
+    }
+  },
   component: ManageUsersPage,
 })
 
-const RANK_NAMES: Record<number, string> = {
-  0: 'Гость',
-  1: 'Участник',
-  2: 'Офицер',
-  3: 'Полковник',
-  4: 'Лидер',
-}
+const ALL_RANKS = [UserRank.Guest, UserRank.Member, UserRank.Officer, UserRank.Colonel, UserRank.Leader]
 
 function ManageUsersPage() {
   const { t } = useTranslation()
@@ -69,18 +68,14 @@ function ManageUsersPage() {
                         updateRank.mutate({ userId: user.id, rank: newRank })
                       }}
                     >
-                      {Object.entries(RANK_NAMES)
-                        .filter(([rank]) => {
-                          const r = Number(rank)
-                          if (r === UserRank.Leader && currentUser?.rank !== UserRank.Leader) return false
-                          return true
-                        })
-                        .map(([rank, name]) => (
-                          <option key={rank} value={rank}>{name}</option>
+                      {ALL_RANKS
+                        .filter((r) => r !== UserRank.Leader || currentUser?.rank === UserRank.Leader)
+                        .map((r) => (
+                          <option key={r} value={r}>{t(`users.ranks.${r}`)}</option>
                         ))}
                     </select>
                   ) : (
-                    <span className="text-text-primary text-sm">{RANK_NAMES[user.rank] ?? user.rank}</span>
+                    <span className="text-text-primary text-sm">{t(`users.ranks.${user.rank}`)}</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-text-muted text-sm">{user.email ?? '—'}</td>

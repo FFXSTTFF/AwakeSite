@@ -52,7 +52,9 @@ function SquadsPage() {
                 </div>
               ))}
               {squad.memberCount > 3 && (
-                <div className="text-xs text-text-muted">+{squad.memberCount - 3} ещё</div>
+                <div className="text-xs text-text-muted">
+                  {t('squads.more', { count: squad.memberCount - 3 })}
+                </div>
               )}
               {squad.memberCount === 0 && (
                 <div className="text-sm text-text-muted">{t('squads.noMembers')}</div>
