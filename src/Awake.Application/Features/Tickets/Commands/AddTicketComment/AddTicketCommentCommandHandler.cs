@@ -22,6 +22,9 @@ public class AddTicketCommentCommandHandler(
         if (ticket is null)
             return Result<TicketCommentDto>.Failure("Тикет не найден.");
 
+        if (ticket.Status == Domain.Enums.TicketStatus.Closed)
+            return Result<TicketCommentDto>.Failure("Заявка закрыта. Комментарии недоступны.");
+
         var user = await userRepository.GetByIdAsync(currentUserService.UserId, cancellationToken);
         if (user is null)
             return Result<TicketCommentDto>.Failure("Пользователь не найден.");

@@ -414,11 +414,23 @@ public class DiscordController(
         if (string.IsNullOrEmpty(channelId))
             return Ok(Ephemeral("❌ Could not determine channel."));
 
-        // Respond first — then delete after short delay so Discord delivers the response
+        // Mark ticket as Closed so website blocks further comments
+        var scope = httpContextAccessor.HttpContext!.RequestServices.CreateScope();
+        var ticketRepo = scope.ServiceProvider.GetRequiredService<ITicketRepository>();
+        var ticket = await ticketRepo.GetByDiscordChannelIdAsync(channelId);
+        if (ticket is not null)
+        {
+            ticket.Status = TicketStatus.Closed;
+            ticket.DiscordChannelId = null;
+            await ticketRepo.UpdateAsync(ticket);
+        }
+
+        // Delete Discord channel after short delay so response is delivered first
         _ = Task.Run(async () =>
         {
             await Task.Delay(1500);
             await discordBotService.DeleteChannelAsync(channelId);
+            scope.Dispose();
         });
 
         return Ok(Ephemeral("🗑️ Channel will be deleted shortly."));

@@ -56,6 +56,7 @@ export const TicketStatus = {
   InReview: 1,
   Approved: 2,
   Rejected: 3,
+  Closed: 4,
 } as const
 export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
 

@@ -17,6 +17,7 @@ const STATUS_CLASSES: Record<number, string> = {
   [TicketStatus.InReview]: 'bg-accent/10 text-accent border-accent/30',
   [TicketStatus.Approved]: 'bg-green-400/10 text-green-400 border-green-400/30',
   [TicketStatus.Rejected]: 'bg-destructive/10 text-destructive border-destructive/30',
+  [TicketStatus.Closed]: 'bg-muted text-muted-foreground border-border',
 }
 
 const TYPE_ICON: Record<number, React.ComponentType<{ size?: number; className?: string }>> = {

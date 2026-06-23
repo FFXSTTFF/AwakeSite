@@ -189,6 +189,7 @@ const STATUS_CLASSES: Record<number, string> = {
   [TicketStatus.InReview]: 'bg-accent/10 text-accent',
   [TicketStatus.Approved]: 'bg-green-400/10 text-green-400',
   [TicketStatus.Rejected]: 'bg-destructive/10 text-destructive',
+  [TicketStatus.Closed]: 'bg-muted text-muted-foreground',
 }
 
 function StatusPill({ status, t }: { status: number; t: (key: string) => string }) {

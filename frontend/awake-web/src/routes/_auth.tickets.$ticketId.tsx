@@ -27,6 +27,7 @@ const STATUS_VARIANT: Record<number, 'default' | 'secondary' | 'destructive' | '
   [TicketStatus.InReview]: 'default',
   [TicketStatus.Approved]: 'default',
   [TicketStatus.Rejected]: 'destructive',
+  [TicketStatus.Closed]: 'secondary',
 }
 
 const STATUS_CLASS: Record<number, string> = {
@@ -34,6 +35,7 @@ const STATUS_CLASS: Record<number, string> = {
   [TicketStatus.InReview]: 'bg-accent/10 text-accent border-accent/30 hover:bg-accent/20',
   [TicketStatus.Approved]: 'bg-green-400/10 text-green-400 border-green-400/30 hover:bg-green-400/20',
   [TicketStatus.Rejected]: '',
+  [TicketStatus.Closed]: 'bg-muted text-muted-foreground border-border',
 }
 
 function TicketDetailPage() {
@@ -178,7 +180,7 @@ function TicketDetailPage() {
             </div>
           ))}
 
-          {isOfficerPlus && (
+          {isOfficerPlus && ticket.status !== TicketStatus.Closed && (
             <>
               {ticket.comments.length > 0 && <Separator />}
               <div className="space-y-3">
@@ -199,6 +201,9 @@ function TicketDetailPage() {
                 </Button>
               </div>
             </>
+          )}
+          {ticket.status === TicketStatus.Closed && (
+            <p className="text-xs text-muted-foreground">{t('tickets.closed')}</p>
           )}
         </CardContent>
       </Card>
