@@ -19,6 +19,7 @@ public interface IDiscordBotService
 
     Task PostTicketEmbedAsync(
         string channelId,
+        Guid ticketId,
         string gameNickname,
         string description,
         string discordUsername,

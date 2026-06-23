@@ -3,6 +3,7 @@ using System.Text.Json;
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Features.Tickets.Commands.CreateDiscordTicket;
+using Awake.Application.Features.Tickets.Commands.UpdateTicketStatus;
 using Awake.Domain.Entities;
 using Awake.Domain.Enums;
 using MediatR;
@@ -200,11 +201,53 @@ public class DiscordController(
 
     // ── MESSAGE_COMPONENT (button click) ─────────────────────────────────────
 
-    private Task<IActionResult> HandleMessageComponent(JsonElement root)
+    private async Task<IActionResult> HandleMessageComponent(JsonElement root)
     {
-        var customId = root.GetProperty("data").GetProperty("custom_id").GetString();
-        return Task.FromResult<IActionResult>(
-            customId == "open_ticket" ? Ok(BuildTicketModal()) : Ok(new { type = 1 }));
+        var customId = root.GetProperty("data").GetProperty("custom_id").GetString() ?? string.Empty;
+
+        if (customId == "open_ticket")
+            return Ok(BuildTicketModal());
+
+        if (customId.StartsWith("approve_ticket:") || customId.StartsWith("reject_ticket:"))
+            return await HandleTicketDecision(root, customId);
+
+        return Ok(new { type = 1 });
+    }
+
+    private async Task<IActionResult> HandleTicketDecision(JsonElement root, string customId)
+    {
+        var guildId = root.TryGetProperty("guild_id", out var gid) ? gid.GetString() : null;
+
+        // Officer check: verify the clicking user has the configured admin role
+        if (!string.IsNullOrEmpty(guildId))
+        {
+            var gs = await guildSettingsRepository.GetByGuildIdAsync(guildId);
+            if (gs?.AdminRoleId is not null)
+            {
+                var memberRoles = root.TryGetProperty("member", out var mem) &&
+                                  mem.TryGetProperty("roles", out var roles)
+                    ? roles.EnumerateArray().Select(r => r.GetString()).ToHashSet()
+                    : [];
+
+                if (!memberRoles.Contains(gs.AdminRoleId))
+                    return Ok(Ephemeral("❌ Only officers can make this decision."));
+            }
+        }
+
+        // Parse ticket ID from custom_id (format: "approve_ticket:{guid}" or "reject_ticket:{guid}")
+        var parts = customId.Split(':', 2);
+        if (parts.Length < 2 || !Guid.TryParse(parts[1], out var ticketId))
+            return Ok(Ephemeral("❌ Invalid ticket reference."));
+
+        var isApprove = customId.StartsWith("approve_ticket:");
+        var newStatus = isApprove ? TicketStatus.Approved : TicketStatus.Rejected;
+
+        var result = await mediator.Send(new UpdateTicketStatusCommand(ticketId, newStatus));
+        if (!result.IsSuccess)
+            return Ok(Ephemeral($"❌ {result.Error}"));
+
+        var statusText = isApprove ? "✅ Application **approved**." : "❌ Application **rejected**.";
+        return Ok(Ephemeral(statusText));
     }
 
     // ── MODAL_SUBMIT ──────────────────────────────────────────────────────────
@@ -251,10 +294,11 @@ public class DiscordController(
         if (ticketChannelId is not null)
         {
             var capturedGs = gs;
+            var ticketId = result.Value;
             _ = Task.Run(async () =>
             {
                 await discordBotService.PostTicketEmbedAsync(
-                    ticketChannelId, nickname!, description!, username);
+                    ticketChannelId, ticketId, nickname!, description!, username);
 
                 if (capturedGs?.AdminChannelId is not null)
                     await discordBotService.PostAdminEmbedAsync(

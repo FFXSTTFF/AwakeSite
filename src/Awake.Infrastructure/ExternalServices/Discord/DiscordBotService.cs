@@ -199,6 +199,7 @@ public class DiscordBotService(
 
     public async Task PostTicketEmbedAsync(
         string channelId,
+        Guid ticketId,
         string gameNickname,
         string description,
         string discordUsername,
@@ -223,7 +224,33 @@ public class DiscordBotService(
                             new { name = "Game Nickname", value = gameNickname, inline = true },
                             new { name = "Status", value = "⏳ Pending review", inline = false }
                         },
-                        footer = new { text = "Officers will review your application shortly." }
+                        footer = new { text = "Officers only: use the buttons below to make a decision." }
+                    }
+                },
+                components = new[]
+                {
+                    new
+                    {
+                        type = 1,
+                        components = new object[]
+                        {
+                            new
+                            {
+                                type = 2,
+                                style = 3, // SUCCESS (green)
+                                label = "Approve",
+                                custom_id = $"approve_ticket:{ticketId}",
+                                emoji = new { name = "✅" }
+                            },
+                            new
+                            {
+                                type = 2,
+                                style = 4, // DANGER (red)
+                                label = "Reject",
+                                custom_id = $"reject_ticket:{ticketId}",
+                                emoji = new { name = "❌" }
+                            }
+                        }
                     }
                 }
             };
