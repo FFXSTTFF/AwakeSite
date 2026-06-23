@@ -48,7 +48,8 @@ public class GetTicketByIdQueryHandler(
 
         var dto = new TicketDetailDto(
             ticket.Id, ticket.Type, ticket.Status, ticket.GameNickname,
-            ticket.Author.Username, ticket.Description, ticket.CreatedAt,
+            ticket.Author?.Username ?? ticket.DiscordUsername ?? "Discord",
+            ticket.Description, ticket.CreatedAt,
             ticket.ReviewedAt, reviewedByUsername,
             comments, playerData);
 

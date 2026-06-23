@@ -22,6 +22,7 @@ public class GetTicketsQueryHandler(
 
         return tickets.Select(t => new TicketListItemDto(
             t.Id, t.Type, t.Status, t.GameNickname,
-            t.Author.Username, t.CreatedAt)).ToList();
+            t.Author?.Username ?? t.DiscordUsername ?? "Discord",
+            t.CreatedAt)).ToList();
     }
 }
