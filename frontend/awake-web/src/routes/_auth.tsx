@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, Outlet } from '@tanstack/react-router'
-import { Navbar } from '@/components/layout/Navbar'
+import { Sidebar } from '@/components/layout/Sidebar'
 
 export const Route = createFileRoute('/_auth')({
   beforeLoad: ({ context }) => {
@@ -12,10 +12,12 @@ export const Route = createFileRoute('/_auth')({
 
 function AuthLayout() {
   return (
-    <div className="min-h-screen bg-bg-page">
-      <Navbar />
-      <main className="container mx-auto px-4 py-8">
-        <Outlet />
+    <div className="flex min-h-screen bg-bg-page">
+      <Sidebar />
+      <main className="flex-1 min-h-screen overflow-auto">
+        <div className="max-w-5xl mx-auto px-6 py-8 md:pt-8 pt-16">
+          <Outlet />
+        </div>
       </main>
     </div>
   )

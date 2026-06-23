@@ -1,6 +1,9 @@
 using Awake.API.Extensions;
+using Awake.API.Hubs;
 using Awake.API.Middleware;
+using Awake.API.Services;
 using Awake.Application;
+using Awake.Application.Common.Interfaces;
 using Awake.Infrastructure;
 using Serilog;
 
@@ -16,17 +19,21 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddRateLimitingPolicies();
 builder.Services.AddCorsPolicies(builder.Configuration);
 
-// 3. Swagger
+// 3. SignalR
+builder.Services.AddSignalR();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// 4. Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 4. Serilog
+// 5. Serilog
 builder.Host.UseSerilog((ctx, cfg) =>
     cfg.ReadFrom.Configuration(ctx.Configuration).WriteTo.Console());
 
 var app = builder.Build();
 
-// 5. Middleware pipeline (order matters)
+// 6. Middleware pipeline (order matters)
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
@@ -35,6 +42,7 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 if (app.Environment.IsDevelopment())
 {

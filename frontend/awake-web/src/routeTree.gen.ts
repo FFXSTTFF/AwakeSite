@@ -13,9 +13,12 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthTicketsRouteImport } from './routes/_auth.tickets'
 import { Route as AuthSquadsRouteImport } from './routes/_auth.squads'
 import { Route as AuthSettingsRouteImport } from './routes/_auth.settings'
 import { Route as AuthDashboardRouteImport } from './routes/_auth.dashboard'
+import { Route as AuthTicketsNewRouteImport } from './routes/_auth.tickets.new'
+import { Route as AuthTicketsTicketIdRouteImport } from './routes/_auth.tickets.$ticketId'
 import { Route as AuthSquadsSquadIdRouteImport } from './routes/_auth.squads.$squadId'
 import { Route as AuthManageUsersRouteImport } from './routes/_auth.manage.users'
 
@@ -38,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthTicketsRoute = AuthTicketsRouteImport.update({
+  id: '/tickets',
+  path: '/tickets',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthSquadsRoute = AuthSquadsRouteImport.update({
   id: '/squads',
   path: '/squads',
@@ -52,6 +60,16 @@ const AuthDashboardRoute = AuthDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthRoute,
+} as any)
+const AuthTicketsNewRoute = AuthTicketsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AuthTicketsRoute,
+} as any)
+const AuthTicketsTicketIdRoute = AuthTicketsTicketIdRouteImport.update({
+  id: '/$ticketId',
+  path: '/$ticketId',
+  getParentRoute: () => AuthTicketsRoute,
 } as any)
 const AuthSquadsSquadIdRoute = AuthSquadsSquadIdRouteImport.update({
   id: '/$squadId',
@@ -71,8 +89,11 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthDashboardRoute
   '/settings': typeof AuthSettingsRoute
   '/squads': typeof AuthSquadsRouteWithChildren
+  '/tickets': typeof AuthTicketsRouteWithChildren
   '/manage/users': typeof AuthManageUsersRoute
   '/squads/$squadId': typeof AuthSquadsSquadIdRoute
+  '/tickets/$ticketId': typeof AuthTicketsTicketIdRoute
+  '/tickets/new': typeof AuthTicketsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -81,8 +102,11 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthDashboardRoute
   '/settings': typeof AuthSettingsRoute
   '/squads': typeof AuthSquadsRouteWithChildren
+  '/tickets': typeof AuthTicketsRouteWithChildren
   '/manage/users': typeof AuthManageUsersRoute
   '/squads/$squadId': typeof AuthSquadsSquadIdRoute
+  '/tickets/$ticketId': typeof AuthTicketsTicketIdRoute
+  '/tickets/new': typeof AuthTicketsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -93,8 +117,11 @@ export interface FileRoutesById {
   '/_auth/dashboard': typeof AuthDashboardRoute
   '/_auth/settings': typeof AuthSettingsRoute
   '/_auth/squads': typeof AuthSquadsRouteWithChildren
+  '/_auth/tickets': typeof AuthTicketsRouteWithChildren
   '/_auth/manage/users': typeof AuthManageUsersRoute
   '/_auth/squads/$squadId': typeof AuthSquadsSquadIdRoute
+  '/_auth/tickets/$ticketId': typeof AuthTicketsTicketIdRoute
+  '/_auth/tickets/new': typeof AuthTicketsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -105,8 +132,11 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/settings'
     | '/squads'
+    | '/tickets'
     | '/manage/users'
     | '/squads/$squadId'
+    | '/tickets/$ticketId'
+    | '/tickets/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -115,8 +145,11 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/settings'
     | '/squads'
+    | '/tickets'
     | '/manage/users'
     | '/squads/$squadId'
+    | '/tickets/$ticketId'
+    | '/tickets/new'
   id:
     | '__root__'
     | '/'
@@ -126,8 +159,11 @@ export interface FileRouteTypes {
     | '/_auth/dashboard'
     | '/_auth/settings'
     | '/_auth/squads'
+    | '/_auth/tickets'
     | '/_auth/manage/users'
     | '/_auth/squads/$squadId'
+    | '/_auth/tickets/$ticketId'
+    | '/_auth/tickets/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -167,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth/tickets': {
+      id: '/_auth/tickets'
+      path: '/tickets'
+      fullPath: '/tickets'
+      preLoaderRoute: typeof AuthTicketsRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/squads': {
       id: '/_auth/squads'
       path: '/squads'
@@ -187,6 +230,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthDashboardRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_auth/tickets/new': {
+      id: '/_auth/tickets/new'
+      path: '/new'
+      fullPath: '/tickets/new'
+      preLoaderRoute: typeof AuthTicketsNewRouteImport
+      parentRoute: typeof AuthTicketsRoute
+    }
+    '/_auth/tickets/$ticketId': {
+      id: '/_auth/tickets/$ticketId'
+      path: '/$ticketId'
+      fullPath: '/tickets/$ticketId'
+      preLoaderRoute: typeof AuthTicketsTicketIdRouteImport
+      parentRoute: typeof AuthTicketsRoute
     }
     '/_auth/squads/$squadId': {
       id: '/_auth/squads/$squadId'
@@ -217,10 +274,25 @@ const AuthSquadsRouteWithChildren = AuthSquadsRoute._addFileChildren(
   AuthSquadsRouteChildren,
 )
 
+interface AuthTicketsRouteChildren {
+  AuthTicketsTicketIdRoute: typeof AuthTicketsTicketIdRoute
+  AuthTicketsNewRoute: typeof AuthTicketsNewRoute
+}
+
+const AuthTicketsRouteChildren: AuthTicketsRouteChildren = {
+  AuthTicketsTicketIdRoute: AuthTicketsTicketIdRoute,
+  AuthTicketsNewRoute: AuthTicketsNewRoute,
+}
+
+const AuthTicketsRouteWithChildren = AuthTicketsRoute._addFileChildren(
+  AuthTicketsRouteChildren,
+)
+
 interface AuthRouteChildren {
   AuthDashboardRoute: typeof AuthDashboardRoute
   AuthSettingsRoute: typeof AuthSettingsRoute
   AuthSquadsRoute: typeof AuthSquadsRouteWithChildren
+  AuthTicketsRoute: typeof AuthTicketsRouteWithChildren
   AuthManageUsersRoute: typeof AuthManageUsersRoute
 }
 
@@ -228,6 +300,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthDashboardRoute: AuthDashboardRoute,
   AuthSettingsRoute: AuthSettingsRoute,
   AuthSquadsRoute: AuthSquadsRouteWithChildren,
+  AuthTicketsRoute: AuthTicketsRouteWithChildren,
   AuthManageUsersRoute: AuthManageUsersRoute,
 }
 

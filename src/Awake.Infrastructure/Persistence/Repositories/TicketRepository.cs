@@ -9,11 +9,24 @@ public class TicketRepository(AppDbContext context) : ITicketRepository
     public async Task<Ticket?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await context.Tickets.FindAsync([id], ct);
 
+    public async Task<Ticket?> GetByIdWithDetailsAsync(Guid id, CancellationToken ct = default)
+        => await context.Tickets
+            .Include(t => t.Author)
+            .Include(t => t.Comments).ThenInclude(c => c.Author)
+            .FirstOrDefaultAsync(t => t.Id == id, ct);
+
     public async Task<IReadOnlyList<Ticket>> GetAllAsync(CancellationToken ct = default)
-        => await context.Tickets.ToListAsync(ct);
+        => await context.Tickets
+            .Include(t => t.Author)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync(ct);
 
     public async Task<IReadOnlyList<Ticket>> GetByAuthorAsync(Guid authorId, CancellationToken ct = default)
-        => await context.Tickets.Where(t => t.AuthorId == authorId).ToListAsync(ct);
+        => await context.Tickets
+            .Include(t => t.Author)
+            .Where(t => t.AuthorId == authorId)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync(ct);
 
     public async Task AddAsync(Ticket ticket, CancellationToken ct = default)
     {
