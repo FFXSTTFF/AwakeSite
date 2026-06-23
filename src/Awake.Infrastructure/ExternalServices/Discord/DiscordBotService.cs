@@ -300,6 +300,35 @@ public class DiscordBotService(
         }
     }
 
+    // ── Post comment from website into ticket channel ─────────────────────────
+
+    public async Task PostCommentAsync(string channelId, string authorUsername, string content, CancellationToken ct = default)
+    {
+        if (!EnsureConfigured()) return;
+        SetAuth();
+        try
+        {
+            var payload = new
+            {
+                embeds = new[]
+                {
+                    new
+                    {
+                        description = content,
+                        color = 0x5865F2, // Discord blurple — distinguishes from ticket embed
+                        author = new { name = $"💬 {authorUsername} (website)" },
+                        footer = new { text = "Comment from the website" }
+                    }
+                }
+            };
+            await httpClient.PostAsJsonAsync($"{ApiBase}/channels/{channelId}/messages", payload, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to post comment to {ChannelId}", channelId);
+        }
+    }
+
     // ── Post status update in ticket channel ──────────────────────────────────
 
     public async Task PostStatusUpdateAsync(string channelId, string statusText, CancellationToken ct = default)

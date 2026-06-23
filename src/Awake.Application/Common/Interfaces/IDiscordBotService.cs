@@ -33,4 +33,6 @@ public interface IDiscordBotService
         CancellationToken ct = default);
 
     Task PostStatusUpdateAsync(string channelId, string statusText, CancellationToken ct = default);
+
+    Task PostCommentAsync(string channelId, string authorUsername, string content, CancellationToken ct = default);
 }

@@ -11,7 +11,8 @@ public class AddTicketCommentCommandHandler(
     ITicketRepository ticketRepository,
     IUserRepository userRepository,
     ICurrentUserService currentUserService,
-    INotificationService notificationService
+    INotificationService notificationService,
+    IDiscordBotService discordBotService
 ) : IRequestHandler<AddTicketCommentCommand, Result<TicketCommentDto>>
 {
     public async Task<Result<TicketCommentDto>> Handle(
@@ -53,6 +54,10 @@ public class AddTicketCommentCommandHandler(
                 $"{user.Username}: {request.Content[..Math.Min(80, request.Content.Length)]}…",
                 cancellationToken);
         }
+
+        if (!string.IsNullOrEmpty(ticket.DiscordChannelId))
+            await discordBotService.PostCommentAsync(
+                ticket.DiscordChannelId, user.Username, comment.Content, cancellationToken);
 
         var dto = new TicketCommentDto(
             comment.Id, user.Username, comment.Content, comment.CreatedAt);
