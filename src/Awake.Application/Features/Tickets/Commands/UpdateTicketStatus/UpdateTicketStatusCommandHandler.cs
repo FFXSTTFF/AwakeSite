@@ -23,7 +23,7 @@ public class UpdateTicketStatusCommandHandler(
             return Result<bool>.Failure("Тикет не найден.");
 
         ticket.Status = request.NewStatus;
-        ticket.ReviewedBy = currentUserService.UserId;
+        ticket.ReviewedBy = currentUserService.IsAuthenticated ? currentUserService.UserId : null;
         ticket.ReviewedAt = DateTime.UtcNow;
 
         await ticketRepository.UpdateAsync(ticket, cancellationToken);
@@ -48,11 +48,21 @@ public class UpdateTicketStatusCommandHandler(
             // Post update in private ticket channel (if it exists)
             if (!string.IsNullOrEmpty(ticket.DiscordChannelId))
             {
-                var reviewer = await userRepository.GetByIdAsync(currentUserService.UserId, cancellationToken);
+                string reviewerName;
+                if (!string.IsNullOrEmpty(request.ReviewedByDiscordUsername))
+                    reviewerName = request.ReviewedByDiscordUsername;
+                else if (currentUserService.IsAuthenticated)
+                {
+                    var reviewer = await userRepository.GetByIdAsync(currentUserService.UserId, cancellationToken);
+                    reviewerName = reviewer?.Username ?? "Офицер";
+                }
+                else
+                    reviewerName = "Офицер";
+
                 var statusEmbed = request.NewStatus == TicketStatus.Approved
                     ? "✅ **Заявка принята**"
                     : "❌ **Заявка отклонена**";
-                var message = $"{statusEmbed}\nРешение принял: **{reviewer?.Username ?? "Офицер"}**";
+                var message = $"{statusEmbed}\nРешение принял: **{reviewerName}**";
 
                 await discordBotService.PostStatusUpdateAsync(
                     ticket.DiscordChannelId, message, cancellationToken);

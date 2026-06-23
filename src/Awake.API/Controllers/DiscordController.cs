@@ -19,7 +19,9 @@ public class DiscordController(
     IMediator mediator,
     IConfiguration configuration,
     IDiscordBotService discordBotService,
-    IDiscordGuildSettingsRepository guildSettingsRepository) : ControllerBase
+    IDiscordGuildSettingsRepository guildSettingsRepository,
+    IHttpContextAccessor httpContextAccessor,
+    ILogger<DiscordController> logger) : ControllerBase
 {
     // ── Main interaction endpoint ─────────────────────────────────────────────
 
@@ -218,27 +220,26 @@ public class DiscordController(
         return Ok(new { type = 1 });
     }
 
-    private async Task<IActionResult> HandleTicketDecision(JsonElement root, string customId)
+    private IActionResult HandleTicketDecision(JsonElement root, string customId)
     {
         var guildId = root.TryGetProperty("guild_id", out var gid) ? gid.GetString() : null;
+        var interactionToken = root.TryGetProperty("token", out var tok) ? tok.GetString() : null;
+        var applicationId = configuration["Discord:ApplicationId"];
 
-        // Officer check: verify the clicking user has the configured admin role
-        if (!string.IsNullOrEmpty(guildId))
+        // Officer check (synchronous data extraction)
+        HashSet<string?> memberRoles = [];
+        if (root.TryGetProperty("member", out var mem))
         {
-            var gs = await guildSettingsRepository.GetByGuildIdAsync(guildId);
-            if (gs?.AdminRoleId is not null)
-            {
-                var memberRoles = root.TryGetProperty("member", out var mem) &&
-                                  mem.TryGetProperty("roles", out var roles)
-                    ? roles.EnumerateArray().Select(r => r.GetString()).ToHashSet()
-                    : [];
-
-                if (!memberRoles.Contains(gs.AdminRoleId))
-                    return Ok(Ephemeral("❌ Only officers can make this decision."));
-            }
+            if (mem.TryGetProperty("roles", out var roles))
+                memberRoles = roles.EnumerateArray().Select(r => r.GetString()).ToHashSet();
         }
 
-        // Parse ticket ID from custom_id (format: "approve_ticket:{guid}" or "reject_ticket:{guid}")
+        var discordUsername = mem.ValueKind != JsonValueKind.Undefined &&
+                              mem.TryGetProperty("user", out var u) &&
+                              u.TryGetProperty("username", out var un)
+            ? un.GetString()
+            : null;
+
         var parts = customId.Split(':', 2);
         if (parts.Length < 2 || !Guid.TryParse(parts[1], out var ticketId))
             return Ok(Ephemeral("❌ Invalid ticket reference."));
@@ -246,12 +247,46 @@ public class DiscordController(
         var isApprove = customId.StartsWith("approve_ticket:");
         var newStatus = isApprove ? TicketStatus.Approved : TicketStatus.Rejected;
 
-        var result = await mediator.Send(new UpdateTicketStatusCommand(ticketId, newStatus));
-        if (!result.IsSuccess)
-            return Ok(Ephemeral($"❌ {result.Error}"));
+        // Respond immediately to Discord (must be within 3 seconds)
+        // All actual work runs in background, result sent as follow-up
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // Officer check using stored settings
+                if (!string.IsNullOrEmpty(guildId))
+                {
+                    using var scope = httpContextAccessor.HttpContext!.RequestServices.CreateScope();
+                    var repo = scope.ServiceProvider.GetRequiredService<IDiscordGuildSettingsRepository>();
+                    var bot = scope.ServiceProvider.GetRequiredService<IDiscordBotService>();
+                    var med = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-        var statusText = isApprove ? "✅ Application **approved**." : "❌ Application **rejected**.";
-        return Ok(Ephemeral(statusText));
+                    var gs = await repo.GetByGuildIdAsync(guildId);
+                    if (gs?.AdminRoleId is not null && !memberRoles.Contains(gs.AdminRoleId))
+                    {
+                        if (!string.IsNullOrEmpty(interactionToken) && !string.IsNullOrEmpty(applicationId))
+                            await bot.FollowUpAsync(applicationId, interactionToken, "❌ Only officers can make this decision.");
+                        return;
+                    }
+
+                    var result = await med.Send(new UpdateTicketStatusCommand(ticketId, newStatus, discordUsername));
+                    if (!string.IsNullOrEmpty(interactionToken) && !string.IsNullOrEmpty(applicationId))
+                    {
+                        var msg = result.IsSuccess
+                            ? (isApprove ? "✅ Application **approved**." : "❌ Application **rejected**.")
+                            : $"❌ {result.Error}";
+                        await bot.FollowUpAsync(applicationId, interactionToken, msg);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Background ticket decision failed");
+            }
+        });
+
+        // Deferred ephemeral response — tells Discord "we're working on it"
+        return Ok(new { type = 5, data = new { flags = 64 } });
     }
 
     private IActionResult HandleAddCommentButton(string customId)

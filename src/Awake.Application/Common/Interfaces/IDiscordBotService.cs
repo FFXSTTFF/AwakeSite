@@ -36,5 +36,7 @@ public interface IDiscordBotService
 
     Task DeleteChannelAsync(string channelId, CancellationToken ct = default);
 
+    Task FollowUpAsync(string applicationId, string interactionToken, string content, CancellationToken ct = default);
+
     Task PostCommentAsync(string channelId, string authorUsername, string content, CancellationToken ct = default);
 }

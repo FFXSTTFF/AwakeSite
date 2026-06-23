@@ -4,4 +4,8 @@ using MediatR;
 
 namespace Awake.Application.Features.Tickets.Commands.UpdateTicketStatus;
 
-public record UpdateTicketStatusCommand(Guid TicketId, TicketStatus NewStatus) : IRequest<Result<bool>>;
+public record UpdateTicketStatusCommand(
+    Guid TicketId,
+    TicketStatus NewStatus,
+    string? ReviewedByDiscordUsername = null
+) : IRequest<Result<bool>>;

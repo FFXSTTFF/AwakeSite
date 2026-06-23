@@ -367,6 +367,22 @@ public class DiscordBotService(
         }
     }
 
+    public async Task FollowUpAsync(string applicationId, string interactionToken, string content, CancellationToken ct = default)
+    {
+        if (!EnsureConfigured()) return;
+        SetAuth();
+        try
+        {
+            await httpClient.PostAsJsonAsync(
+                $"{ApiBase}/webhooks/{applicationId}/{interactionToken}",
+                new { content, flags = 64 }, ct); // flags=64 = ephemeral
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send follow-up interaction");
+        }
+    }
+
     public async Task DeleteChannelAsync(string channelId, CancellationToken ct = default)
     {
         if (!EnsureConfigured()) return;
