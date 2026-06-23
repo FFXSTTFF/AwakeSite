@@ -34,6 +34,7 @@ public static class DependencyInjection
         // Discord
         services.AddHttpClient<IDiscordNotifier, DiscordNotifier>();
         services.AddHttpClient<IDiscordBotService, DiscordBotService>();
+        services.AddHostedService<DiscordGatewayService>();
 
         // Player data sources
         services.AddScoped<IPlayerDataSource, StubDataSource>();

@@ -11,4 +11,5 @@ public interface ITicketRepository
     Task AddAsync(Ticket ticket, CancellationToken ct = default);
     Task UpdateAsync(Ticket ticket, CancellationToken ct = default);
     Task AddCommentAsync(TicketComment comment, CancellationToken ct = default);
+    Task<Ticket?> GetByDiscordChannelIdAsync(string channelId, CancellationToken ct = default);
 }

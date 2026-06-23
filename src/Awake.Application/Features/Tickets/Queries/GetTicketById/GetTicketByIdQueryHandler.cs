@@ -43,7 +43,11 @@ public class GetTicketByIdQueryHandler(
 
         var comments = ticket.Comments
             .OrderBy(c => c.CreatedAt)
-            .Select(c => new TicketCommentDto(c.Id, c.Author.Username, c.Content, c.CreatedAt))
+            .Select(c => new TicketCommentDto(
+                c.Id,
+                c.Author?.Username ?? c.DiscordAuthorName ?? "Discord",
+                c.Content,
+                c.CreatedAt))
             .ToList();
 
         var dto = new TicketDetailDto(

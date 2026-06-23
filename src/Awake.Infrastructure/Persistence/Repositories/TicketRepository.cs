@@ -45,4 +45,8 @@ public class TicketRepository(AppDbContext context) : ITicketRepository
         await context.TicketComments.AddAsync(comment, ct);
         await context.SaveChangesAsync(ct);
     }
+
+    public async Task<Ticket?> GetByDiscordChannelIdAsync(string channelId, CancellationToken ct = default)
+        => await context.Tickets
+            .FirstOrDefaultAsync(t => t.DiscordChannelId == channelId, ct);
 }

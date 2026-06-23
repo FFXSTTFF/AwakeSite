@@ -18,8 +18,10 @@ public class TicketCommentConfiguration : IEntityTypeConfiguration<TicketComment
         builder.HasOne(x => x.Author)
             .WithMany()
             .HasForeignKey(x => x.AuthorId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Property(x => x.DiscordAuthorName).HasMaxLength(100);
         builder.Property(x => x.Content)
             .IsRequired()
             .HasMaxLength(2000);

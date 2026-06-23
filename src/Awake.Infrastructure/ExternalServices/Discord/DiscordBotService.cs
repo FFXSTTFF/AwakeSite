@@ -237,7 +237,7 @@ public class DiscordBotService(
                             new
                             {
                                 type = 2,
-                                style = 3, // SUCCESS (green)
+                                style = 3,
                                 label = "Approve",
                                 custom_id = $"approve_ticket:{ticketId}",
                                 emoji = new { name = "✅" }
@@ -245,11 +245,11 @@ public class DiscordBotService(
                             new
                             {
                                 type = 2,
-                                style = 4, // DANGER (red)
+                                style = 4,
                                 label = "Reject",
                                 custom_id = $"reject_ticket:{ticketId}",
                                 emoji = new { name = "❌" }
-                            }
+                            },
                         }
                     }
                 }

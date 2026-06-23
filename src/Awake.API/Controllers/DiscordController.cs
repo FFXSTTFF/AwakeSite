@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
+using Awake.Application.Features.Tickets.Commands.AddTicketComment;
 using Awake.Application.Features.Tickets.Commands.CreateDiscordTicket;
 using Awake.Application.Features.Tickets.Commands.UpdateTicketStatus;
 using Awake.Domain.Entities;
@@ -211,6 +212,9 @@ public class DiscordController(
         if (customId.StartsWith("approve_ticket:") || customId.StartsWith("reject_ticket:"))
             return await HandleTicketDecision(root, customId);
 
+        if (customId.StartsWith("add_comment:"))
+            return HandleAddCommentButton(customId);
+
         return Ok(new { type = 1 });
     }
 
@@ -250,11 +254,49 @@ public class DiscordController(
         return Ok(Ephemeral(statusText));
     }
 
+    private IActionResult HandleAddCommentButton(string customId)
+    {
+        var ticketId = customId["add_comment:".Length..];
+        return Ok(new
+        {
+            type = 9,
+            data = new
+            {
+                title = "Add Comment",
+                custom_id = $"comment_modal:{ticketId}",
+                components = new[]
+                {
+                    new
+                    {
+                        type = 1,
+                        components = new[]
+                        {
+                            new
+                            {
+                                type = 4,
+                                custom_id = "comment_text",
+                                label = "Your comment",
+                                style = 2,
+                                required = true,
+                                max_length = 1000,
+                                placeholder = "Write your message here..."
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     // ── MODAL_SUBMIT ──────────────────────────────────────────────────────────
 
     private async Task<IActionResult> HandleModalSubmit(JsonElement root)
     {
-        var customId = root.GetProperty("data").GetProperty("custom_id").GetString();
+        var customId = root.GetProperty("data").GetProperty("custom_id").GetString() ?? string.Empty;
+
+        if (customId.StartsWith("comment_modal:"))
+            return await HandleCommentModalSubmit(root, customId);
+
         if (customId != "ticket_modal")
             return Ok(new { type = 1 });
 
@@ -311,6 +353,26 @@ public class DiscordController(
             : "✅ Application submitted! Officers will review it shortly.";
 
         return Ok(Ephemeral(reply));
+    }
+
+    private async Task<IActionResult> HandleCommentModalSubmit(JsonElement root, string customId)
+    {
+        var ticketIdStr = customId["comment_modal:".Length..];
+        if (!Guid.TryParse(ticketIdStr, out var ticketId))
+            return Ok(Ephemeral("❌ Invalid ticket reference."));
+
+        var (_, username) = ExtractUser(root);
+        var values = ExtractModalValues(root.GetProperty("data").GetProperty("components"));
+        values.TryGetValue("comment_text", out var content);
+
+        if (string.IsNullOrWhiteSpace(content))
+            return Ok(Ephemeral("❌ Comment cannot be empty."));
+
+        var result = await mediator.Send(new AddDiscordCommentCommand(ticketId, username, content!));
+
+        return result.IsSuccess
+            ? Ok(Ephemeral("✅ Your comment has been added."))
+            : Ok(Ephemeral($"❌ {result.Error}"));
     }
 
     // ── Shared helpers ────────────────────────────────────────────────────────
