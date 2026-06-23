@@ -43,7 +43,7 @@ public class DiscordController(IMediator mediator, IConfiguration configuration)
         if (type == 2)
         {
             var commandName = root.GetProperty("data").GetProperty("name").GetString();
-            if (commandName is "заявка" or "ticket" or "apply")
+            if (commandName == "ticket")
                 return Ok(BuildModal());
         }
 
@@ -105,9 +105,9 @@ public class DiscordController(IMediator mediator, IConfiguration configuration)
 
         var command = new
         {
-            name = "заявка",
+            name = "ticket",
             type = 1,
-            description = "Подать заявку на вступление в клан Awake [LOVE]",
+            description = "Submit an application to join clan Awake [LOVE]",
         };
 
         var resp = await http.PostAsJsonAsync(
