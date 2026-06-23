@@ -15,6 +15,22 @@ public class DiscordBotService(
     private const string ApiBase = "https://discord.com/api/v10";
     private const int BrandColor = 4054148; // #3ddc84
 
+    private string? _botUserId;
+
+    private async Task<string?> GetBotUserIdAsync(CancellationToken ct = default)
+    {
+        if (_botUserId is not null) return _botUserId;
+        try
+        {
+            var resp = await httpClient.GetAsync($"{ApiBase}/users/@me", ct);
+            if (!resp.IsSuccessStatusCode) return null;
+            using var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>(ct);
+            _botUserId = doc?.RootElement.GetProperty("id").GetString();
+            return _botUserId;
+        }
+        catch { return null; }
+    }
+
     private void SetAuth()
     {
         httpClient.DefaultRequestHeaders.Remove("Authorization");
@@ -141,11 +157,15 @@ public class DiscordBotService(
             const long allowBits = 1024L + 2048L + 65536L; // VIEW + SEND + READ_HISTORY
             const long denyBits  = allowBits;
 
+            var botId = await GetBotUserIdAsync(ct);
+
             var overwrites = new List<object>
             {
-                new { id = guildId,   type = 0, allow = "0",                  deny = denyBits.ToString() },
-                new { id = userId,    type = 1, allow = allowBits.ToString(),  deny = "0" },
+                new { id = guildId, type = 0, allow = "0",                 deny = denyBits.ToString() },
+                new { id = userId,  type = 1, allow = allowBits.ToString(), deny = "0" },
             };
+            if (!string.IsNullOrEmpty(botId))
+                overwrites.Add(new { id = botId, type = 1, allow = allowBits.ToString(), deny = "0" });
             if (!string.IsNullOrEmpty(adminRoleId))
                 overwrites.Add(new { id = adminRoleId, type = 0, allow = allowBits.ToString(), deny = "0" });
 
