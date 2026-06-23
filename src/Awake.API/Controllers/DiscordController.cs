@@ -212,8 +212,8 @@ public class DiscordController(
         if (customId.StartsWith("approve_ticket:") || customId.StartsWith("reject_ticket:"))
             return await HandleTicketDecision(root, customId);
 
-        if (customId.StartsWith("add_comment:"))
-            return HandleAddCommentButton(customId);
+        if (customId == "close_channel")
+            return await HandleCloseChannel(root);
 
         return Ok(new { type = 1 });
     }
@@ -353,6 +353,40 @@ public class DiscordController(
             : "✅ Application submitted! Officers will review it shortly.";
 
         return Ok(Ephemeral(reply));
+    }
+
+    private async Task<IActionResult> HandleCloseChannel(JsonElement root)
+    {
+        var guildId   = root.TryGetProperty("guild_id",   out var gid) ? gid.GetString() : null;
+        var channelId = root.TryGetProperty("channel_id", out var cid) ? cid.GetString() : null;
+
+        // Officer check
+        if (!string.IsNullOrEmpty(guildId))
+        {
+            var gs = await guildSettingsRepository.GetByGuildIdAsync(guildId);
+            if (gs?.AdminRoleId is not null)
+            {
+                var memberRoles = root.TryGetProperty("member", out var mem) &&
+                                  mem.TryGetProperty("roles", out var roles)
+                    ? roles.EnumerateArray().Select(r => r.GetString()).ToHashSet()
+                    : [];
+
+                if (!memberRoles.Contains(gs.AdminRoleId))
+                    return Ok(Ephemeral("❌ Only officers can close the channel."));
+            }
+        }
+
+        if (string.IsNullOrEmpty(channelId))
+            return Ok(Ephemeral("❌ Could not determine channel."));
+
+        // Respond first — then delete after short delay so Discord delivers the response
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(1500);
+            await discordBotService.DeleteChannelAsync(channelId);
+        });
+
+        return Ok(Ephemeral("🗑️ Channel will be deleted shortly."));
     }
 
     private async Task<IActionResult> HandleCommentModalSubmit(JsonElement root, string customId)

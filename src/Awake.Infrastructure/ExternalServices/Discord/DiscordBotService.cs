@@ -337,12 +337,49 @@ public class DiscordBotService(
         SetAuth();
         try
         {
-            await httpClient.PostAsJsonAsync($"{ApiBase}/channels/{channelId}/messages",
-                new { content = statusText }, ct);
+            var payload = new
+            {
+                content = statusText,
+                components = new[]
+                {
+                    new
+                    {
+                        type = 1,
+                        components = new[]
+                        {
+                            new
+                            {
+                                type = 2,
+                                style = 4, // DANGER (red)
+                                label = "Close Channel",
+                                custom_id = "close_channel",
+                                emoji = new { name = "🗑️" }
+                            }
+                        }
+                    }
+                }
+            };
+            await httpClient.PostAsJsonAsync($"{ApiBase}/channels/{channelId}/messages", payload, ct);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to post status update to {ChannelId}", channelId);
+        }
+    }
+
+    public async Task DeleteChannelAsync(string channelId, CancellationToken ct = default)
+    {
+        if (!EnsureConfigured()) return;
+        SetAuth();
+        try
+        {
+            var resp = await httpClient.DeleteAsync($"{ApiBase}/channels/{channelId}", ct);
+            if (!resp.IsSuccessStatusCode)
+                logger.LogWarning("Failed to delete channel {ChannelId}: {Status}", channelId, resp.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to delete channel {ChannelId}", channelId);
         }
     }
 
