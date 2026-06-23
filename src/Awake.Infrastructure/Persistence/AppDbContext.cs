@@ -12,6 +12,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<TicketComment> TicketComments => Set<TicketComment>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
         => builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

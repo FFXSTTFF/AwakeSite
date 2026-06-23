@@ -18,6 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { useState } from 'react'
+import { NotificationBell } from '@/components/layout/NotificationBell'
 
 const RANK_CLASSES: Record<number, string> = {
   [UserRank.Guest]: 'bg-secondary text-muted-foreground border-border',
@@ -121,9 +122,12 @@ export function Sidebar() {
         <div className="mx-1 p-3 rounded-md bg-secondary border border-border space-y-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium text-foreground truncate">{user?.username}</span>
-            <Badge className={cn('text-[10px] px-1.5 py-0 h-5 border shrink-0', RANK_CLASSES[user?.rank ?? 0])}>
-              {t(`users.ranks.${user?.rank ?? 0}`)}
-            </Badge>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <NotificationBell />
+              <Badge className={cn('text-[10px] px-1.5 py-0 h-5 border', RANK_CLASSES[user?.rank ?? 0])}>
+                {t(`users.ranks.${user?.rank ?? 0}`)}
+              </Badge>
+            </div>
           </div>
           <Button
             variant="ghost"

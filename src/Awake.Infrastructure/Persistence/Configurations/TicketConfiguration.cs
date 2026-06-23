@@ -13,7 +13,11 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.HasOne(x => x.Author)
             .WithMany(x => x.Tickets)
             .HasForeignKey(x => x.AuthorId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(x => x.DiscordUserId).HasMaxLength(30);
+        builder.Property(x => x.DiscordUsername).HasMaxLength(100);
 
         builder.HasOne<User>()
             .WithMany()

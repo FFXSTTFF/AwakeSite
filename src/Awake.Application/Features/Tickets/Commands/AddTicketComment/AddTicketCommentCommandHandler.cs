@@ -10,7 +10,8 @@ namespace Awake.Application.Features.Tickets.Commands.AddTicketComment;
 public class AddTicketCommentCommandHandler(
     ITicketRepository ticketRepository,
     IUserRepository userRepository,
-    ICurrentUserService currentUserService
+    ICurrentUserService currentUserService,
+    INotificationService notificationService
 ) : IRequestHandler<AddTicketCommentCommand, Result<TicketCommentDto>>
 {
     public async Task<Result<TicketCommentDto>> Handle(
@@ -32,6 +33,26 @@ public class AddTicketCommentCommandHandler(
         };
 
         await ticketRepository.AddCommentAsync(comment, cancellationToken);
+
+        // Notify ticket author if they are a website user and not the commenter
+        if (ticket.AuthorId.HasValue && ticket.AuthorId.Value != currentUserService.UserId)
+        {
+            await notificationService.CreateAsync(
+                ticket.AuthorId.Value,
+                "Новый комментарий к заявке",
+                $"{user.Username}: {request.Content[..Math.Min(80, request.Content.Length)]}…",
+                cancellationToken);
+        }
+
+        // Notify the reviewer if they exist and are not the commenter
+        if (ticket.ReviewedBy.HasValue && ticket.ReviewedBy.Value != currentUserService.UserId)
+        {
+            await notificationService.CreateAsync(
+                ticket.ReviewedBy.Value,
+                "Новый комментарий в рассматриваемой заявке",
+                $"{user.Username}: {request.Content[..Math.Min(80, request.Content.Length)]}…",
+                cancellationToken);
+        }
 
         var dto = new TicketCommentDto(
             comment.Id, user.Username, comment.Content, comment.CreatedAt);

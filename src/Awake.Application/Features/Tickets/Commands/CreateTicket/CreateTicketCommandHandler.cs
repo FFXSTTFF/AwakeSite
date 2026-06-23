@@ -12,7 +12,8 @@ public class CreateTicketCommandHandler(
     ITicketRepository ticketRepository,
     IUserRepository userRepository,
     ICurrentUserService currentUserService,
-    IDiscordNotifier discordNotifier
+    IDiscordNotifier discordNotifier,
+    INotificationService notificationService
 ) : IRequestHandler<CreateTicketCommand, Result<TicketListItemDto>>
 {
     public async Task<Result<TicketListItemDto>> Handle(
@@ -32,6 +33,13 @@ public class CreateTicketCommandHandler(
         };
 
         await ticketRepository.AddAsync(ticket, cancellationToken);
+
+        await notificationService.CreateForRankAsync(
+            UserRank.Officer,
+            "Новая заявка",
+            $"{user.Username} — {request.GameNickname}",
+            cancellationToken);
+
         await discordNotifier.NotifyNewTicketAsync(ticket, cancellationToken);
 
         var dto = new TicketListItemDto(

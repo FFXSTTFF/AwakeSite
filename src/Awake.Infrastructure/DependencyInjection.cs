@@ -9,6 +9,7 @@ using Awake.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Awake.Infrastructure;
 
@@ -27,9 +28,11 @@ public static class DependencyInjection
         services.AddScoped<ISquadRepository, SquadRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
 
         // Discord
         services.AddHttpClient<IDiscordNotifier, DiscordNotifier>();
+        services.AddHttpClient<IDiscordBotService, DiscordBotService>();
 
         // Player data sources
         services.AddScoped<IPlayerDataSource, StubDataSource>();

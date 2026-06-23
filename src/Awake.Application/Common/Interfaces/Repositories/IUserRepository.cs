@@ -1,4 +1,5 @@
 using Awake.Domain.Entities;
+using Awake.Domain.Enums;
 
 namespace Awake.Application.Common.Interfaces.Repositories;
 
@@ -10,4 +11,5 @@ public interface IUserRepository
     Task AddAsync(User user, CancellationToken ct = default);
     Task UpdateAsync(User user, CancellationToken ct = default);
     Task<IReadOnlyList<User>> GetAllAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<User>> GetByMinRankAsync(UserRank minRank, CancellationToken ct = default);
 }
