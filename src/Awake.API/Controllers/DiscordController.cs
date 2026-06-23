@@ -212,7 +212,7 @@ public class DiscordController(
             return Ok(BuildTicketModal());
 
         if (customId.StartsWith("approve_ticket:") || customId.StartsWith("reject_ticket:"))
-            return await HandleTicketDecision(root, customId);
+            return HandleTicketDecision(root, customId);
 
         if (customId == "close_channel")
             return await HandleCloseChannel(root);
