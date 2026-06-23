@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next'
 import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/store/authStore'
 import { ApiError } from '@/api/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -55,62 +58,70 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-page flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-bg-card border border-border rounded-2xl p-8 shadow-lg">
-        <h1 className="text-2xl font-semibold text-text-primary mb-6 text-center">
-          {t('auth.login')}
-        </h1>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-text-muted" htmlFor="username">
-              {t('auth.username')}
-            </label>
-            <input
-              id="username"
-              type="text"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="bg-bg-hover border border-border rounded-lg px-3 py-2 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
-              placeholder={t('auth.username')}
-            />
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        {/* Brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 rounded-full bg-accent shadow-[0_0_8px_hsl(var(--accent))]" />
+            <span className="font-bold text-foreground text-lg">Awake <span className="text-accent">[LOVE]</span></span>
           </div>
+          <p className="text-xs text-muted-foreground">STALCRAFT · Clan Platform</p>
+        </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-text-muted" htmlFor="password">
-              {t('auth.password')}
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-bg-hover border border-border rounded-lg px-3 py-2 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
-              placeholder={t('auth.password')}
-            />
-          </div>
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-center">{t('auth.login')}</CardTitle>
+            <CardDescription className="text-center">Введи данные своего аккаунта</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm text-muted-foreground" htmlFor="username">
+                  {t('auth.username')}
+                </label>
+                <Input
+                  id="username"
+                  type="text"
+                  autoComplete="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder={t('auth.username')}
+                />
+              </div>
 
-          {error && (
-            <p className="text-sm text-red-400 text-center">{error}</p>
-          )}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm text-muted-foreground" htmlFor="password">
+                  {t('auth.password')}
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                />
+              </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-bg-page font-semibold rounded-lg py-2 transition-colors"
-          >
-            {loading ? '...' : t('auth.loginButton')}
-          </button>
-        </form>
+              {error && (
+                <p className="text-sm text-destructive text-center">{error}</p>
+              )}
 
-        <p className="mt-4 text-center text-sm text-text-muted">
-          {t('auth.noAccount')}{' '}
-          <Link to="/register" className="text-accent hover:underline">
-            {t('auth.switchToRegister')}
-          </Link>
-        </p>
+              <Button type="submit" disabled={loading} className="mt-1 w-full">
+                {loading ? '...' : t('auth.loginButton')}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="justify-center">
+            <p className="text-sm text-muted-foreground">
+              {t('auth.noAccount')}{' '}
+              <Link to="/register" className="text-accent hover:underline font-medium">
+                {t('auth.switchToRegister')}
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   )

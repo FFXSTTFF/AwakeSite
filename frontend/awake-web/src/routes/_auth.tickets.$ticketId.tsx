@@ -5,6 +5,12 @@ import { useState } from 'react'
 import { ticketsApi } from '@/api/tickets'
 import { TicketStatus, UserRank } from '@/types/api'
 import { useAuthStore } from '@/store/authStore'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export const Route = createFileRoute('/_auth/tickets/$ticketId')({
   component: TicketDetailPage,
@@ -16,11 +22,18 @@ const STATUS_OPTIONS = [
   TicketStatus.Rejected,
 ] as const
 
-const STATUS_COLORS: Record<number, string> = {
-  [TicketStatus.Pending]: 'text-text-muted bg-bg-hover',
-  [TicketStatus.InReview]: 'text-accent bg-accent/10',
-  [TicketStatus.Approved]: 'text-green-400 bg-green-400/10',
-  [TicketStatus.Rejected]: 'text-red-400 bg-red-400/10',
+const STATUS_VARIANT: Record<number, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  [TicketStatus.Pending]: 'secondary',
+  [TicketStatus.InReview]: 'default',
+  [TicketStatus.Approved]: 'default',
+  [TicketStatus.Rejected]: 'destructive',
+}
+
+const STATUS_CLASS: Record<number, string> = {
+  [TicketStatus.Pending]: '',
+  [TicketStatus.InReview]: 'bg-accent/10 text-accent border-accent/30 hover:bg-accent/20',
+  [TicketStatus.Approved]: 'bg-green-400/10 text-green-400 border-green-400/30 hover:bg-green-400/20',
+  [TicketStatus.Rejected]: '',
 }
 
 function TicketDetailPage() {
@@ -55,113 +68,140 @@ function TicketDetailPage() {
     },
   })
 
-  if (isLoading) {
-    return <div className="text-text-muted">{t('common.loading')}</div>
-  }
+  if (isLoading) return <div className="text-muted-foreground">{t('common.loading')}</div>
+  if (!ticket) return <div className="text-muted-foreground">{t('common.notFound')}</div>
 
-  if (!ticket) {
-    return <div className="text-text-muted">{t('common.notFound')}</div>
-  }
+  const statusClass = STATUS_CLASS[ticket.status] || ''
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="bg-bg-card border border-border rounded-lg p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-xl font-bold text-text-primary">{ticket.gameNickname}</h1>
-            <div className="text-sm text-text-muted mt-1">
-              {t(`tickets.types.${ticket.type}`)} · {t('tickets.author')}: {ticket.authorUsername}
+    <div className="max-w-2xl mx-auto space-y-4">
+      {/* Main info */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle className="text-lg">{ticket.gameNickname}</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t(`tickets.types.${ticket.type}`)} · {t('tickets.author')}: {ticket.authorUsername}
+              </p>
             </div>
+            <Badge
+              variant={STATUS_VARIANT[ticket.status]}
+              className={statusClass}
+            >
+              {t(`tickets.statuses.${ticket.status}`)}
+            </Badge>
           </div>
-          <span className={`text-xs px-3 py-1 rounded-full font-medium ${STATUS_COLORS[ticket.status]}`}>
-            {t(`tickets.statuses.${ticket.status}`)}
-          </span>
-        </div>
-        <p className="text-text-primary text-sm whitespace-pre-wrap">{ticket.description}</p>
-        <div className="text-xs text-text-muted mt-4">
-          {new Date(ticket.createdAt).toLocaleString('ru-RU')}
-        </div>
-      </div>
+        </CardHeader>
+        <Separator />
+        <CardContent className="pt-4">
+          <p className="text-sm text-foreground whitespace-pre-wrap">{ticket.description}</p>
+          <p className="text-xs text-muted-foreground mt-4">
+            {new Date(ticket.createdAt).toLocaleString('ru-RU')}
+            {ticket.reviewedByUsername && (
+              <> · Рассмотрел: <span className="text-accent">{ticket.reviewedByUsername}</span></>
+            )}
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Officer controls */}
       {isOfficerPlus && (
-        <div className="bg-bg-card border border-border rounded-lg p-4">
-          <div className="text-sm text-text-muted mb-3">{t('tickets.changeStatus')}</div>
-          <div className="flex items-center gap-3">
-            <select
-              value={selectedStatus ?? ticket.status}
-              onChange={(e) => setSelectedStatus(Number(e.target.value) as TicketStatus)}
-              className="bg-bg-page border border-border rounded px-3 py-1.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('tickets.changeStatus')}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center gap-3">
+            <Select
+              value={selectedStatus?.toString() ?? ticket.status.toString()}
+              onValueChange={(v) => setSelectedStatus(Number(v) as TicketStatus)}
             >
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>{t(`tickets.statuses.${s}`)}</option>
-              ))}
-            </select>
-            <button
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s.toString()}>
+                    {t(`tickets.statuses.${s}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
               onClick={() => selectedStatus !== null && updateStatus.mutate(selectedStatus)}
               disabled={updateStatus.isPending || selectedStatus === null}
-              className="px-4 py-1.5 bg-accent text-bg-page rounded text-sm font-medium disabled:opacity-40 hover:bg-accent/90 transition-colors"
+              size="sm"
             >
               {t('common.save')}
-            </button>
-          </div>
-        </div>
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Player data (officer+) */}
+      {/* Player data */}
       {isOfficerPlus && (
-        <div className="bg-bg-card border border-border rounded-lg p-4">
-          <div className="text-sm font-medium text-text-primary mb-2">{t('tickets.playerData')}</div>
-          {ticket.playerData ? (
-            <pre className="text-xs text-text-muted whitespace-pre-wrap">
-              {JSON.stringify(ticket.playerData, null, 2)}
-            </pre>
-          ) : (
-            <div className="text-sm text-text-muted">{t('tickets.noPlayerData')}</div>
-          )}
-        </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">{t('tickets.playerData')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {ticket.playerData ? (
+              <pre className="text-xs text-muted-foreground whitespace-pre-wrap bg-secondary rounded-md p-3">
+                {JSON.stringify(ticket.playerData, null, 2)}
+              </pre>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t('tickets.noPlayerData')}</p>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Comments */}
-      <div className="bg-bg-card border border-border rounded-lg p-4 space-y-4">
-        <div className="text-sm font-medium text-text-primary">{t('tickets.comments')}</div>
-        {ticket.comments.length === 0 && (
-          <div className="text-sm text-text-muted">—</div>
-        )}
-        {ticket.comments.map((comment) => (
-          <div key={comment.id} className="border-t border-border pt-3">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-medium text-accent">{comment.authorUsername}</span>
-              <span className="text-xs text-text-muted">
-                {new Date(comment.createdAt).toLocaleString('ru-RU')}
-              </span>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">{t('tickets.comments')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {ticket.comments.length === 0 && (
+            <p className="text-sm text-muted-foreground">—</p>
+          )}
+          {ticket.comments.map((comment, i) => (
+            <div key={comment.id}>
+              {i > 0 && <Separator className="mb-4" />}
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-xs font-semibold text-accent">{comment.authorUsername}</span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(comment.createdAt).toLocaleString('ru-RU')}
+                </span>
+              </div>
+              <p className="text-sm text-foreground">{comment.content}</p>
             </div>
-            <p className="text-sm text-text-primary">{comment.content}</p>
-          </div>
-        ))}
+          ))}
 
-        {/* Add comment form (officer+) */}
-        {isOfficerPlus && (
-          <div className="border-t border-border pt-3 space-y-2">
-            <textarea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder={t('tickets.commentContent')}
-              rows={3}
-              className="w-full bg-bg-page border border-border rounded px-3 py-2 text-text-primary text-sm focus:outline-none focus:border-accent resize-none"
-              maxLength={1000}
-            />
-            <button
-              onClick={() => commentText.trim() && addComment.mutate(commentText.trim())}
-              disabled={addComment.isPending || !commentText.trim()}
-              className="px-4 py-1.5 bg-accent text-bg-page rounded text-sm font-medium disabled:opacity-40 hover:bg-accent/90 transition-colors"
-            >
-              {t('tickets.addComment')}
-            </button>
-          </div>
-        )}
-      </div>
+          {isOfficerPlus && (
+            <>
+              {ticket.comments.length > 0 && <Separator />}
+              <div className="space-y-3">
+                <Textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder={t('tickets.commentContent')}
+                  rows={3}
+                  maxLength={1000}
+                  className="resize-none"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => commentText.trim() && addComment.mutate(commentText.trim())}
+                  disabled={addComment.isPending || !commentText.trim()}
+                >
+                  {t('tickets.addComment')}
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

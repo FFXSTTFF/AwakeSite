@@ -4,6 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { ticketsApi } from '@/api/tickets'
 import { TicketType } from '@/types/api'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { UserPlus, RotateCcw, ArrowLeft, Send } from 'lucide-react'
 
 export const Route = createFileRoute('/_auth/tickets/new')({
@@ -44,86 +48,91 @@ function NewTicketPage() {
     <div className="max-w-xl mx-auto">
       <Link
         to="/tickets"
-        className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6 transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
       >
         <ArrowLeft size={14} /> {t('common.cancel')}
       </Link>
 
-      <h1 className="text-2xl font-bold text-text-primary mb-6">{t('tickets.new')}</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('tickets.new')}</CardTitle>
+          <CardDescription>Заполни форму — офицеры рассмотрят заявку</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Type selector */}
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                {t('tickets.type')}
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {TICKET_TYPES.map(({ value, icon: Icon, labelKey, desc }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setType(value)}
+                    className={`flex flex-col items-start gap-1.5 p-4 rounded-lg border text-left transition-all ${
+                      type === value
+                        ? 'border-accent/50 bg-accent/8 ring-1 ring-accent/30'
+                        : 'border-border bg-card hover:bg-secondary'
+                    }`}
+                  >
+                    <Icon size={17} className={type === value ? 'text-accent' : 'text-muted-foreground'} />
+                    <span className={`text-sm font-semibold ${type === value ? 'text-accent' : 'text-foreground'}`}>
+                      {t(labelKey)}
+                    </span>
+                    <span className="text-xs text-muted-foreground leading-snug">{desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Type selector */}
-        <div>
-          <label className="block text-sm font-medium text-text-muted mb-2">{t('tickets.type')}</label>
-          <div className="grid grid-cols-2 gap-3">
-            {TICKET_TYPES.map(({ value, icon: Icon, labelKey, desc }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setType(value)}
-                className={`flex flex-col items-start gap-1 p-4 rounded-xl border text-left transition-all ${
-                  type === value
-                    ? 'border-accent bg-accent/8 shadow-[0_0_12px_rgba(61,220,132,0.1)]'
-                    : 'border-border bg-bg-card hover:border-border hover:bg-bg-hover'
-                }`}
-              >
-                <Icon size={18} className={type === value ? 'text-accent' : 'text-text-muted'} />
-                <span className={`text-sm font-semibold ${type === value ? 'text-accent' : 'text-text-primary'}`}>
-                  {t(labelKey)}
-                </span>
-                <span className="text-xs text-text-muted leading-snug">{desc}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+            {/* Nickname */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-muted-foreground">
+                {t('tickets.gameNickname')}
+              </label>
+              <Input
+                value={gameNickname}
+                onChange={(e) => setGameNickname(e.target.value)}
+                required
+                maxLength={100}
+                placeholder="Твой никнейм в игре"
+              />
+            </div>
 
-        {/* Nickname */}
-        <div>
-          <label className="block text-sm font-medium text-text-muted mb-1.5">
-            {t('tickets.gameNickname')}
-          </label>
-          <input
-            value={gameNickname}
-            onChange={(e) => setGameNickname(e.target.value)}
-            className="w-full bg-bg-hover border border-border rounded-lg px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all"
-            required
-            maxLength={100}
-            placeholder="Твой никнейм в игре"
-          />
-        </div>
+            {/* Description */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-muted-foreground">
+                  {t('tickets.description')}
+                </label>
+                <span className="text-xs text-muted-foreground">{description.length}/2000</span>
+              </div>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={6}
+                required
+                maxLength={2000}
+                placeholder="Расскажи о себе — опыт, достижения, почему хочешь в клан..."
+                className="resize-none"
+              />
+            </div>
 
-        {/* Description */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-sm font-medium text-text-muted">{t('tickets.description')}</label>
-            <span className="text-xs text-text-muted">{description.length}/2000</span>
-          </div>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={6}
-            className="w-full bg-bg-hover border border-border rounded-lg px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all resize-none"
-            required
-            maxLength={2000}
-            placeholder="Расскажи о себе — опыт, достижения, почему хочешь в клан..."
-          />
-        </div>
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-lg px-4 py-3">
+                {error}
+              </div>
+            )}
 
-        {error && (
-          <div className="bg-red-400/10 border border-red-400/30 text-red-400 text-sm rounded-lg px-4 py-3">
-            {error}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={createTicket.isPending}
-          className="w-full flex items-center justify-center gap-2 py-2.5 bg-accent text-bg-page rounded-lg font-semibold text-sm disabled:opacity-50 hover:bg-accent-hover transition-colors shadow-[0_0_16px_rgba(61,220,132,0.2)]"
-        >
-          <Send size={15} />
-          {createTicket.isPending ? t('common.loading') : t('tickets.submit')}
-        </button>
-      </form>
+            <Button type="submit" disabled={createTicket.isPending} className="w-full">
+              <Send size={15} />
+              {createTicket.isPending ? t('common.loading') : t('tickets.submit')}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }
