@@ -2,6 +2,10 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/authStore'
 import { UserRank } from '@/types/api'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   Shield,
@@ -15,12 +19,12 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 
-const RANK_COLORS: Record<number, string> = {
-  [UserRank.Guest]: 'text-text-muted bg-bg-hover',
-  [UserRank.Member]: 'text-blue-400 bg-blue-400/10',
-  [UserRank.Officer]: 'text-accent bg-accent/10',
-  [UserRank.Colonel]: 'text-yellow-400 bg-yellow-400/10',
-  [UserRank.Leader]: 'text-red-400 bg-red-400/10',
+const RANK_CLASSES: Record<number, string> = {
+  [UserRank.Guest]: 'bg-secondary text-muted-foreground border-border',
+  [UserRank.Member]: 'bg-blue-400/10 text-blue-400 border-blue-400/30',
+  [UserRank.Officer]: 'bg-accent/10 text-accent border-accent/30',
+  [UserRank.Colonel]: 'bg-yellow-400/10 text-yellow-400 border-yellow-400/30',
+  [UserRank.Leader]: 'bg-destructive/10 text-destructive border-destructive/30',
 }
 
 export function Sidebar() {
@@ -50,85 +54,86 @@ export function Sidebar() {
     return pathname === path || pathname.startsWith(path + '/')
   }
 
+  const NavLink = ({ to, label, icon: Icon }: { to: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }) => (
+    <Link
+      to={to as '/dashboard'}
+      onClick={() => setOpen(false)}
+      className={cn(
+        'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors',
+        isActive(to)
+          ? 'bg-accent/10 text-accent'
+          : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
+      )}
+    >
+      <Icon size={16} className={isActive(to) ? 'text-accent' : 'text-muted-foreground'} />
+      {label}
+      {isActive(to) && <ChevronRight size={13} className="ml-auto opacity-60" />}
+    </Link>
+  )
+
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Brand */}
-      <div className="px-4 py-5 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-accent shadow-[0_0_6px_#3ddc84]" />
-          <span className="font-bold text-text-primary tracking-wide">Awake <span className="text-accent">[LOVE]</span></span>
+      <div className="px-4 py-5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-2 h-2 rounded-full bg-accent shadow-[0_0_8px_hsl(var(--accent))]" />
+          <span className="font-bold text-foreground">
+            Awake <span className="text-accent">[LOVE]</span>
+          </span>
         </div>
-        <p className="text-xs text-text-muted mt-1">STALCRAFT</p>
+        <p className="text-xs text-muted-foreground mt-1 pl-[18px]">STALCRAFT</p>
       </div>
 
+      <Separator />
+
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navLinks.map(({ to, label, icon: Icon }) => (
-          <Link
-            key={to}
-            to={to}
-            onClick={() => setOpen(false)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-              isActive(to)
-                ? 'bg-accent/10 text-accent'
-                : 'text-text-muted hover:text-text-primary hover:bg-bg-hover'
-            }`}
-          >
-            <Icon size={17} className={isActive(to) ? 'text-accent' : 'text-text-muted group-hover:text-text-primary'} />
-            {label}
-            {isActive(to) && <ChevronRight size={14} className="ml-auto text-accent/60" />}
-          </Link>
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+        {navLinks.map((link) => (
+          <NavLink key={link.to} {...link} />
         ))}
 
         {isColonelPlus && (
           <>
-            <div className="my-2 border-t border-border" />
-            <Link
-              to="/manage/users"
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                isActive('/manage')
-                  ? 'bg-accent/10 text-accent'
-                  : 'text-text-muted hover:text-text-primary hover:bg-bg-hover'
-              }`}
-            >
-              <Users size={17} className={isActive('/manage') ? 'text-accent' : 'text-text-muted group-hover:text-text-primary'} />
-              {t('nav.manage')}
-              {isActive('/manage') && <ChevronRight size={14} className="ml-auto text-accent/60" />}
-            </Link>
+            <div className="py-2"><Separator /></div>
+            <NavLink to="/manage/users" label={t('nav.manage')} icon={Users} />
           </>
         )}
       </nav>
 
+      <Separator />
+
       {/* User section */}
-      <div className="border-t border-border p-3 space-y-2">
+      <div className="p-2 space-y-1">
         <Link
           to="/settings"
           onClick={() => setOpen(false)}
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all group ${
+          className={cn(
+            'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
             isActive('/settings')
               ? 'bg-accent/10 text-accent'
-              : 'text-text-muted hover:text-text-primary hover:bg-bg-hover'
-          }`}
+              : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
+          )}
         >
-          <Settings size={15} />
+          <Settings size={16} />
           {t('nav.settings')}
         </Link>
 
-        <div className="px-3 py-2 rounded-lg bg-bg-page border border-border">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <span className="text-sm font-medium text-text-primary truncate">{user?.username}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${RANK_COLORS[user?.rank ?? 0]}`}>
+        <div className="mx-1 p-3 rounded-md bg-secondary border border-border space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-medium text-foreground truncate">{user?.username}</span>
+            <Badge className={cn('text-[10px] px-1.5 py-0 h-5 border shrink-0', RANK_CLASSES[user?.rank ?? 0])}>
               {t(`users.ranks.${user?.rank ?? 0}`)}
-            </span>
+            </Badge>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleLogout}
-            className="flex items-center gap-1.5 text-xs text-text-muted hover:text-red-400 transition-colors mt-1"
+            className="w-full justify-start h-7 px-1 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5"
           >
             <LogOut size={12} />
             {t('nav.logout')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -137,23 +142,25 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-60 shrink-0 bg-bg-card border-r border-border min-h-screen sticky top-0 h-screen">
+      <aside className="hidden md:flex flex-col w-60 shrink-0 bg-card border-r border-border min-h-screen sticky top-0 h-screen">
         <SidebarContent />
       </aside>
 
-      {/* Mobile: hamburger button */}
-      <button
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-bg-card border border-border rounded-lg text-text-muted hover:text-text-primary"
+      {/* Mobile hamburger */}
+      <Button
+        variant="outline"
+        size="icon"
+        className="md:hidden fixed top-4 left-4 z-50 h-8 w-8"
         onClick={() => setOpen((v) => !v)}
         aria-label="Toggle menu"
       >
-        {open ? <X size={18} /> : <Menu size={18} />}
-      </button>
+        {open ? <X size={16} /> : <Menu size={16} />}
+      </Button>
 
       {/* Mobile overlay */}
       {open && (
         <div className="md:hidden fixed inset-0 z-40 flex">
-          <div className="w-60 bg-bg-card border-r border-border flex flex-col h-full">
+          <div className="w-60 bg-card border-r border-border flex flex-col h-full">
             <SidebarContent />
           </div>
           <div className="flex-1 bg-black/50" onClick={() => setOpen(false)} />

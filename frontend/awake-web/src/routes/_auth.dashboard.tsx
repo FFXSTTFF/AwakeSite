@@ -5,11 +5,23 @@ import { useAuthStore } from '@/store/authStore'
 import { UserRank, TicketStatus } from '@/types/api'
 import { squadsApi } from '@/api/squads'
 import { ticketsApi } from '@/api/tickets'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 import { Shield, FileText, Users, ChevronRight, Clock } from 'lucide-react'
 
 export const Route = createFileRoute('/_auth/dashboard')({
   component: DashboardPage,
 })
+
+const RANK_CLASSES: Record<number, string> = {
+  [UserRank.Guest]: 'bg-secondary text-muted-foreground border-border',
+  [UserRank.Member]: 'bg-blue-400/10 text-blue-400 border-blue-400/30',
+  [UserRank.Officer]: 'bg-accent/10 text-accent border-accent/30',
+  [UserRank.Colonel]: 'bg-yellow-400/10 text-yellow-400 border-yellow-400/30',
+  [UserRank.Leader]: 'bg-destructive/10 text-destructive border-destructive/30',
+}
 
 const RANK_LABELS: Record<number, string> = {
   [UserRank.Guest]: 'Гость',
@@ -17,14 +29,6 @@ const RANK_LABELS: Record<number, string> = {
   [UserRank.Officer]: 'Офицер',
   [UserRank.Colonel]: 'Полковник',
   [UserRank.Leader]: 'Лидер',
-}
-
-const RANK_COLORS: Record<number, string> = {
-  [UserRank.Guest]: 'text-text-muted bg-bg-hover',
-  [UserRank.Member]: 'text-blue-400 bg-blue-400/10',
-  [UserRank.Officer]: 'text-accent bg-accent/10',
-  [UserRank.Colonel]: 'text-yellow-400 bg-yellow-400/10',
-  [UserRank.Leader]: 'text-red-400 bg-red-400/10',
 }
 
 function DashboardPage() {
@@ -39,142 +43,157 @@ function DashboardPage() {
   const activeTickets = tickets?.filter((t) => t.status === TicketStatus.InReview).length ?? 0
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Welcome */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">
-            Привет, <span className="text-accent">{user?.username}</span> 👋
+          <h1 className="text-2xl font-bold text-foreground">
+            Привет, <span className="text-accent">{user?.username}</span>
           </h1>
-          <p className="text-text-muted text-sm mt-1">Клан Awake [LOVE] · STALCRAFT</p>
+          <p className="text-muted-foreground text-sm mt-0.5">Клан Awake [LOVE] · STALCRAFT</p>
         </div>
-        <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${RANK_COLORS[user?.rank ?? 0]}`}>
+        <Badge className={cn('text-xs font-semibold border', RANK_CLASSES[user?.rank ?? 0])}>
           {RANK_LABELS[user?.rank ?? 0]}
-        </span>
+        </Badge>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
-          icon={<Users size={18} className="text-blue-400" />}
-          label="Бойцов в кланe"
+          icon={<Users size={17} className="text-blue-400" />}
+          label="Бойцов в клане"
           value={totalMembers}
-          bg="bg-blue-400/5 border-blue-400/20"
+          accent="blue"
         />
         <StatCard
-          icon={<Shield size={18} className="text-accent" />}
+          icon={<Shield size={17} className="text-accent" />}
           label="Отрядов"
           value={squads?.length ?? 0}
-          bg="bg-accent/5 border-accent/20"
+          accent="green"
         />
         <StatCard
-          icon={<Clock size={18} className="text-yellow-400" />}
+          icon={<Clock size={17} className="text-yellow-400" />}
           label="Ожидают рассмотрения"
           value={pendingTickets}
-          bg="bg-yellow-400/5 border-yellow-400/20"
+          accent="yellow"
         />
         <StatCard
-          icon={<FileText size={18} className="text-purple-400" />}
+          icon={<FileText size={17} className="text-purple-400" />}
           label="На рассмотрении"
           value={activeTickets}
-          bg="bg-purple-400/5 border-purple-400/20"
+          accent="purple"
         />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4">
         {/* Squads preview */}
-        <div className="bg-bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-text-primary flex items-center gap-2">
-              <Shield size={16} className="text-accent" /> {t('nav.squads')}
-            </h2>
-            <Link to="/squads" className="text-xs text-accent hover:text-accent/80 flex items-center gap-1">
-              Все <ChevronRight size={12} />
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {squads?.slice(0, 3).map((squad) => (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Shield size={14} className="text-accent" /> {t('nav.squads')}
+              </CardTitle>
+              <Link to="/squads" className="text-xs text-accent hover:text-accent/80 flex items-center gap-0.5 transition-colors">
+                Все <ChevronRight size={12} />
+              </Link>
+            </div>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4 space-y-3">
+            {squads?.slice(0, 4).map((squad) => (
               <Link
                 key={squad.id}
                 to="/squads/$squadId"
                 params={{ squadId: squad.id }}
                 className="flex items-center justify-between group"
               >
-                <span className="text-sm text-text-primary group-hover:text-accent transition-colors">
+                <span className="text-sm text-foreground group-hover:text-accent transition-colors">
                   {squad.name}
                 </span>
                 <div className="flex items-center gap-2">
-                  <div className="w-20 h-1.5 bg-bg-hover rounded-full overflow-hidden">
+                  <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
                     <div
                       className="h-full bg-accent/70 rounded-full"
                       style={{ width: `${(squad.memberCount / 5) * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs text-text-muted w-8 text-right">{squad.memberCount}/5</span>
+                  <span className="text-xs text-muted-foreground w-8 text-right">{squad.memberCount}/5</span>
                 </div>
               </Link>
             ))}
-            {!squads?.length && <p className="text-sm text-text-muted">—</p>}
-          </div>
-        </div>
+            {!squads?.length && <p className="text-sm text-muted-foreground">—</p>}
+          </CardContent>
+        </Card>
 
         {/* Recent tickets */}
-        <div className="bg-bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-text-primary flex items-center gap-2">
-              <FileText size={16} className="text-accent" /> {t('nav.tickets')}
-            </h2>
-            <Link to="/tickets" className="text-xs text-accent hover:text-accent/80 flex items-center gap-1">
-              Все <ChevronRight size={12} />
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {tickets?.slice(0, 3).map((ticket) => (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <FileText size={14} className="text-accent" /> {t('nav.tickets')}
+              </CardTitle>
+              <Link to="/tickets" className="text-xs text-accent hover:text-accent/80 flex items-center gap-0.5 transition-colors">
+                Все <ChevronRight size={12} />
+              </Link>
+            </div>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4 space-y-3">
+            {tickets?.slice(0, 4).map((ticket) => (
               <Link
                 key={ticket.id}
                 to="/tickets/$ticketId"
                 params={{ ticketId: ticket.id }}
                 className="flex items-center justify-between group"
               >
-                <span className="text-sm text-text-primary group-hover:text-accent transition-colors truncate max-w-[140px]">
+                <span className="text-sm text-foreground group-hover:text-accent transition-colors truncate max-w-[160px]">
                   {ticket.gameNickname}
                 </span>
                 <StatusPill status={ticket.status} t={t} />
               </Link>
             ))}
-            {!tickets?.length && <p className="text-sm text-text-muted">—</p>}
-          </div>
-        </div>
+            {!tickets?.length && <p className="text-sm text-muted-foreground">—</p>}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
 }
 
-function StatCard({ icon, label, value, bg }: {
+function StatCard({ icon, label, value, accent }: {
   icon: React.ReactNode
   label: string
   value: number
-  bg: string
+  accent: 'blue' | 'green' | 'yellow' | 'purple'
 }) {
+  const border = {
+    blue: 'border-blue-400/20',
+    green: 'border-accent/20',
+    yellow: 'border-yellow-400/20',
+    purple: 'border-purple-400/20',
+  }[accent]
+
   return (
-    <div className={`bg-bg-card border rounded-xl p-4 ${bg}`}>
-      <div className="flex items-center gap-2 mb-2">{icon}</div>
-      <div className="text-2xl font-bold text-text-primary">{value}</div>
-      <div className="text-xs text-text-muted mt-0.5">{label}</div>
-    </div>
+    <Card className={cn('border', border)}>
+      <CardContent className="pt-4 pb-4">
+        <div className="mb-2">{icon}</div>
+        <div className="text-2xl font-bold text-foreground">{value}</div>
+        <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+      </CardContent>
+    </Card>
   )
 }
 
-const STATUS_COLORS: Record<number, string> = {
-  [TicketStatus.Pending]: 'text-text-muted bg-bg-hover',
-  [TicketStatus.InReview]: 'text-accent bg-accent/10',
-  [TicketStatus.Approved]: 'text-green-400 bg-green-400/10',
-  [TicketStatus.Rejected]: 'text-red-400 bg-red-400/10',
+const STATUS_CLASSES: Record<number, string> = {
+  [TicketStatus.Pending]: 'bg-secondary text-muted-foreground',
+  [TicketStatus.InReview]: 'bg-accent/10 text-accent',
+  [TicketStatus.Approved]: 'bg-green-400/10 text-green-400',
+  [TicketStatus.Rejected]: 'bg-destructive/10 text-destructive',
 }
 
 function StatusPill({ status, t }: { status: number; t: (key: string) => string }) {
   return (
-    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLORS[status]}`}>
+    <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0', STATUS_CLASSES[status])}>
       {t(`tickets.statuses.${status}`)}
     </span>
   )
