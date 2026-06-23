@@ -1,5 +1,6 @@
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Domain.Entities;
+using Awake.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Awake.Infrastructure.Persistence.Repositories;
@@ -29,4 +30,7 @@ public class UserRepository(AppDbContext context) : IUserRepository
 
     public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken ct = default)
         => await context.Users.ToListAsync(ct);
+
+    public async Task<IReadOnlyList<User>> GetByMinRankAsync(UserRank minRank, CancellationToken ct = default)
+        => await context.Users.Where(u => u.Rank >= minRank).ToListAsync(ct);
 }

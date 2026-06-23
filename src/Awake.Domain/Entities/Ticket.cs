@@ -5,8 +5,14 @@ namespace Awake.Domain.Entities;
 
 public class Ticket : BaseEntity
 {
-    public Guid AuthorId { get; set; }
-    public User Author { get; set; } = null!;
+    // Nullable — Discord-submitted tickets have no website AuthorId
+    public Guid? AuthorId { get; set; }
+    public User? Author { get; set; }
+
+    // Populated when ticket is submitted via Discord bot
+    public string? DiscordUserId { get; set; }
+    public string? DiscordUsername { get; set; }
+
     public string GameNickname { get; set; } = string.Empty;
     public TicketType Type { get; set; }
     public TicketStatus Status { get; set; } = TicketStatus.Pending;
