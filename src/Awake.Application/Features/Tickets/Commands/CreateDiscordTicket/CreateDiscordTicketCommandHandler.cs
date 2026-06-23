@@ -11,9 +11,9 @@ public class CreateDiscordTicketCommandHandler(
     ITicketRepository ticketRepository,
     INotificationService notificationService,
     IDiscordNotifier discordNotifier
-) : IRequestHandler<CreateDiscordTicketCommand, Result<bool>>
+) : IRequestHandler<CreateDiscordTicketCommand, Result<Guid>>
 {
-    public async Task<Result<bool>> Handle(
+    public async Task<Result<Guid>> Handle(
         CreateDiscordTicketCommand request, CancellationToken cancellationToken)
     {
         var ticket = new Ticket
@@ -25,6 +25,7 @@ public class CreateDiscordTicketCommandHandler(
             Type = request.Type,
             Description = request.Description,
             Status = TicketStatus.Pending,
+            DiscordChannelId = request.DiscordChannelId,
         };
 
         await ticketRepository.AddAsync(ticket, cancellationToken);
@@ -37,6 +38,6 @@ public class CreateDiscordTicketCommandHandler(
 
         await discordNotifier.NotifyNewTicketAsync(ticket, cancellationToken);
 
-        return Result<bool>.Success(true);
+        return Result<Guid>.Success(ticket.Id);
     }
 }

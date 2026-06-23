@@ -8,6 +8,7 @@ namespace Awake.Application.Features.Tickets.Commands.UpdateTicketStatus;
 
 public class UpdateTicketStatusCommandHandler(
     ITicketRepository ticketRepository,
+    IUserRepository userRepository,
     ICurrentUserService currentUserService,
     IDiscordNotifier discordNotifier,
     IDiscordBotService discordBotService,
@@ -29,8 +30,10 @@ public class UpdateTicketStatusCommandHandler(
 
         if (request.NewStatus is TicketStatus.Approved or TicketStatus.Rejected)
         {
-            var statusText = request.NewStatus == TicketStatus.Approved ? "принята ✅" : "отклонена ❌";
-            var message = $"Ваша заявка ({ticket.GameNickname}) была {statusText}.";
+            var statusText = request.NewStatus == TicketStatus.Approved
+                ? "принята ✅"
+                : "отклонена ❌";
+            var dmMessage = $"Ваша заявка ({ticket.GameNickname}) была {statusText}.";
 
             // In-app notification for website users
             if (ticket.AuthorId.HasValue)
@@ -38,15 +41,26 @@ public class UpdateTicketStatusCommandHandler(
                 await notificationService.CreateAsync(
                     ticket.AuthorId.Value,
                     "Решение по заявке",
-                    message,
+                    dmMessage,
                     cancellationToken);
             }
 
-            // Discord DM for Discord-submitted tickets
-            if (!string.IsNullOrEmpty(ticket.DiscordUserId))
+            // Post update in private ticket channel (if it exists)
+            if (!string.IsNullOrEmpty(ticket.DiscordChannelId))
             {
-                await discordBotService.SendDmAsync(ticket.DiscordUserId, message, cancellationToken);
+                var reviewer = await userRepository.GetByIdAsync(currentUserService.UserId, cancellationToken);
+                var statusEmbed = request.NewStatus == TicketStatus.Approved
+                    ? "✅ **Заявка принята**"
+                    : "❌ **Заявка отклонена**";
+                var message = $"{statusEmbed}\nРешение принял: **{reviewer?.Username ?? "Офицер"}**";
+
+                await discordBotService.PostStatusUpdateAsync(
+                    ticket.DiscordChannelId, message, cancellationToken);
             }
+
+            // Discord DM for Discord-submitted tickets without a channel
+            if (!string.IsNullOrEmpty(ticket.DiscordUserId) && string.IsNullOrEmpty(ticket.DiscordChannelId))
+                await discordBotService.SendDmAsync(ticket.DiscordUserId, dmMessage, cancellationToken);
 
             await discordNotifier.NotifyTicketDecisionAsync(ticket, cancellationToken);
         }

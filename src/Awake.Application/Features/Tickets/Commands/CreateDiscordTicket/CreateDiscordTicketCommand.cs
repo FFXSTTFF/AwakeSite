@@ -9,5 +9,6 @@ public record CreateDiscordTicketCommand(
     string DiscordUsername,
     string GameNickname,
     TicketType Type,
-    string Description
-) : IRequest<Result<bool>>;
+    string Description,
+    string? DiscordChannelId = null
+) : IRequest<Result<Guid>>;

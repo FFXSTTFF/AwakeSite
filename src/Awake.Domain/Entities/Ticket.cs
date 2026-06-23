@@ -20,4 +20,7 @@ public class Ticket : BaseEntity
     public Guid? ReviewedBy { get; set; }
     public DateTime? ReviewedAt { get; set; }
     public ICollection<TicketComment> Comments { get; set; } = [];
+
+    // Private Discord channel created for this ticket
+    public string? DiscordChannelId { get; set; }
 }
