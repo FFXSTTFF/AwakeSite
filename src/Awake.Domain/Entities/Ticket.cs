@@ -1,5 +1,6 @@
 using Awake.Domain.Common;
 using Awake.Domain.Enums;
+using Awake.Domain.ValueObjects;
 
 namespace Awake.Domain.Entities;
 
@@ -23,4 +24,6 @@ public class Ticket : BaseEntity
 
     // Private Discord channel created for this ticket
     public string? DiscordChannelId { get; set; }
+
+    public Loadout? Loadout { get; set; }
 }

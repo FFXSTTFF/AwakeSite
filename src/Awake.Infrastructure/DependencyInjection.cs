@@ -1,6 +1,7 @@
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Infrastructure.ExternalServices.Discord;
+using Awake.Infrastructure.ExternalServices.Items;
 using Awake.Infrastructure.ExternalServices.PlayerData;
 using Awake.Infrastructure.ExternalServices.PlayerData.Sources;
 using Awake.Infrastructure.Identity;
@@ -35,6 +36,11 @@ public static class DependencyInjection
         services.AddHttpClient<IDiscordNotifier, DiscordNotifier>();
         services.AddHttpClient<IDiscordBotService, DiscordBotService>();
         services.AddHostedService<DiscordGatewayService>();
+
+        // Items cache
+        services.AddHttpClient("stalzone");
+        services.AddSingleton<IItemCacheService, ItemCacheService>();
+        services.AddHostedService<ItemSyncHostedService>();
 
         // Player data sources
         services.AddScoped<IPlayerDataSource, StubDataSource>();

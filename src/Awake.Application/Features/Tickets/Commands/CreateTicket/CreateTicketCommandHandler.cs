@@ -30,6 +30,7 @@ public class CreateTicketCommandHandler(
             Type = request.Type,
             Description = request.Description,
             Status = TicketStatus.Pending,
+            Loadout = request.Loadout,
         };
 
         await ticketRepository.AddAsync(ticket, cancellationToken);
