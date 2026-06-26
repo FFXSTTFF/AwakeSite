@@ -82,10 +82,31 @@ export interface TicketListItemDto {
   createdAt: string
 }
 
+export interface LoadoutSlot {
+  itemId: string
+  itemName: string
+  itemIcon: string
+}
+
+export interface Loadout {
+  sniper: LoadoutSlot | null
+  weapon: LoadoutSlot
+  armor: LoadoutSlot
+}
+
+export interface ItemSearchResult {
+  id: string
+  category: string
+  nameRu: string
+  icon: string
+  color: string
+}
+
 export interface TicketDetailDto extends TicketListItemDto {
   description: string
   reviewedAt: string | null
   reviewedByUsername: string | null
   comments: TicketCommentDto[]
   playerData: unknown | null
+  loadout: Loadout | null
 }
