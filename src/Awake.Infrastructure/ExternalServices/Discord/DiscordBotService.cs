@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Awake.Application.Common.Interfaces;
+using Awake.Domain.ValueObjects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -203,12 +204,27 @@ public class DiscordBotService(
         string gameNickname,
         string description,
         string discordUsername,
+        Loadout? loadout = null,
         CancellationToken ct = default)
     {
         if (!EnsureConfigured()) return;
         SetAuth();
         try
         {
+            var fields = new List<object>
+            {
+                new { name = "Applicant", value = discordUsername, inline = true },
+                new { name = "Game Nickname", value = gameNickname, inline = true },
+                new { name = "Status", value = "⏳ Pending review", inline = false }
+            };
+
+            if (loadout is not null)
+            {
+                fields.Add(new { name = "🎯 Снайперка", value = loadout.Sniper?.ItemName ?? "—", inline = true });
+                fields.Add(new { name = "⚔️ Основное оружие", value = loadout.Weapon.ItemName, inline = true });
+                fields.Add(new { name = "🛡️ Броня", value = loadout.Armor.ItemName, inline = true });
+            }
+
             var payload = new
             {
                 embeds = new[]
@@ -218,12 +234,7 @@ public class DiscordBotService(
                         title = "📋 Application Details",
                         color = BrandColor,
                         description = $"**About the applicant:**\n{description}",
-                        fields = new[]
-                        {
-                            new { name = "Applicant", value = discordUsername, inline = true },
-                            new { name = "Game Nickname", value = gameNickname, inline = true },
-                            new { name = "Status", value = "⏳ Pending review", inline = false }
-                        },
+                        fields = fields.ToArray(),
                         footer = new { text = "Officers only: use the buttons below to make a decision." }
                     }
                 },

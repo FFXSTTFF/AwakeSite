@@ -55,7 +55,7 @@ public class GetTicketByIdQueryHandler(
             ticket.Author?.Username ?? ticket.DiscordUsername ?? "Discord",
             ticket.Description, ticket.CreatedAt,
             ticket.ReviewedAt, reviewedByUsername,
-            comments, playerData);
+            comments, playerData, ticket.Loadout);
 
         return Result<TicketDetailDto>.Success(dto);
     }

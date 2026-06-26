@@ -1,3 +1,5 @@
+using Awake.Domain.ValueObjects;
+
 namespace Awake.Application.Common.Interfaces;
 
 public interface IDiscordBotService
@@ -23,6 +25,7 @@ public interface IDiscordBotService
         string gameNickname,
         string description,
         string discordUsername,
+        Loadout? loadout = null,
         CancellationToken ct = default);
 
     Task PostAdminEmbedAsync(

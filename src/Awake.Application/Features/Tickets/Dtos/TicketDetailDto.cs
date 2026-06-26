@@ -1,4 +1,5 @@
 using Awake.Domain.Enums;
+using Awake.Domain.ValueObjects;
 
 namespace Awake.Application.Features.Tickets.Dtos;
 
@@ -13,5 +14,6 @@ public record TicketDetailDto(
     DateTime? ReviewedAt,
     string? ReviewedByUsername,
     IReadOnlyList<TicketCommentDto> Comments,
-    object? PlayerData
+    object? PlayerData,
+    Loadout? Loadout
 );
