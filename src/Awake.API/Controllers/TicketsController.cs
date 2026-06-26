@@ -5,13 +5,14 @@ using Awake.Application.Features.Tickets.Commands.UpdateTicketStatus;
 using Awake.Application.Features.Tickets.Queries.GetTicketById;
 using Awake.Application.Features.Tickets.Queries.GetTickets;
 using Awake.Domain.Enums;
+using Awake.Domain.ValueObjects;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Awake.API.Controllers;
 
-public record CreateTicketRequest(string GameNickname, TicketType Type, string Description);
+public record CreateTicketRequest(string GameNickname, TicketType Type, string Description, Loadout? Loadout);
 public record UpdateStatusRequest(TicketStatus NewStatus);
 public record AddCommentRequest(string Content);
 
@@ -30,7 +31,7 @@ public class TicketsController(ISender sender) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateTicketRequest request, CancellationToken ct)
     {
-        var command = new CreateTicketCommand(request.GameNickname, request.Type, request.Description);
+        var command = new CreateTicketCommand(request.GameNickname, request.Type, request.Description, request.Loadout);
         var result = await sender.Send(command, ct);
         return result.IsSuccess
             ? Created(string.Empty, result.Value)
