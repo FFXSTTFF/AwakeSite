@@ -107,12 +107,12 @@ public class DiscordController(
                 description = "Set your gear loadout for the recruitment application",
                 options = new object[]
                 {
-                    new { name = "weapon",      description = "Primary weapon",              type = 3, required = true,  autocomplete = true },
-                    new { name = "weapon_rank", description = "Weapon upgrade level (0–15)", type = 4, required = false, min_value = 0, max_value = 15 },
-                    new { name = "armor",       description = "Armor",                       type = 3, required = true,  autocomplete = true },
-                    new { name = "armor_rank",  description = "Armor upgrade level (0–15)",  type = 4, required = false, min_value = 0, max_value = 15 },
-                    new { name = "sniper",      description = "Sniper rifle (optional)",      type = 3, required = false, autocomplete = true },
-                    new { name = "sniper_rank", description = "Sniper upgrade level (0–15)", type = 4, required = false, min_value = 0, max_value = 15 }
+                    new { name = "weapon",      description = "Primary weapon",             type = 3, required = false, autocomplete = true },
+                    new { name = "weapon_rank", description = "Weapon upgrade level (0-15)", type = 4, required = false, min_value = 0, max_value = 15 },
+                    new { name = "armor",       description = "Armor",                      type = 3, required = false, autocomplete = true },
+                    new { name = "armor_rank",  description = "Armor upgrade level (0-15)",  type = 4, required = false, min_value = 0, max_value = 15 },
+                    new { name = "sniper",      description = "Sniper rifle (optional)",     type = 3, required = false, autocomplete = true },
+                    new { name = "sniper_rank", description = "Sniper upgrade level (0-15)", type = 4, required = false, min_value = 0, max_value = 15 }
                 }
             }
         };
@@ -122,10 +122,18 @@ public class DiscordController(
         {
             var resp = await http.PostAsJsonAsync(
                 $"https://discord.com/api/v10/applications/{appId}/commands", cmd);
-            results.Add($"{(resp.IsSuccessStatusCode ? "✅" : "❌")} {resp.StatusCode}");
+            if (resp.IsSuccessStatusCode)
+            {
+                results.Add($"✅ OK");
+            }
+            else
+            {
+                var body = await resp.Content.ReadAsStringAsync();
+                results.Add($"❌ {resp.StatusCode}: {body}");
+            }
         }
 
-        return Ok(string.Join("\n", results));
+        return Ok(string.Join("\n\n", results));
     }
 
     // ── APPLICATION_COMMAND handlers ──────────────────────────────────────────
@@ -492,8 +500,11 @@ public class DiscordController(
             }
         }
 
-        var weaponItem = weaponId is not null ? itemCacheService.GetById(weaponId) : null;
-        var armorItem  = armorId  is not null ? itemCacheService.GetById(armorId)  : null;
+        if (weaponId is null || armorId is null)
+            return Ok(Ephemeral("❌ **weapon** and **armor** are required. Example:\n`/loadout weapon:АК-103 weapon_rank:15 armor:Берилл armor_rank:10`"));
+
+        var weaponItem = itemCacheService.GetById(weaponId);
+        var armorItem  = itemCacheService.GetById(armorId);
 
         if (weaponItem is null || armorItem is null)
             return Ok(Ephemeral("❌ Could not resolve selected items. Please try again."));
