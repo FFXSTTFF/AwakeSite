@@ -64,6 +64,7 @@ static async Task RegisterDiscordCommandsAsync(WebApplication app)
 
     var botToken = config["Discord:BotToken"];
     var appId    = config["Discord:ApplicationId"];
+    var guildId  = config["Discord:GuildId"];
 
     if (string.IsNullOrWhiteSpace(botToken) || string.IsNullOrWhiteSpace(appId))
     {
@@ -71,56 +72,31 @@ static async Task RegisterDiscordCommandsAsync(WebApplication app)
         return;
     }
 
+    // Guild commands propagate instantly; global commands take up to 1 hour
+    var baseUrl = !string.IsNullOrWhiteSpace(guildId)
+        ? $"https://discord.com/api/v10/applications/{appId}/guilds/{guildId}/commands"
+        : $"https://discord.com/api/v10/applications/{appId}/commands";
+
     try
     {
         using var http = new HttpClient();
         http.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
 
-        var commands = new object[]
-        {
-            new
-            {
-                name = "ticket",
-                type = 1,
-                description = "Submit an application to join clan Awake [LOVE] (direct modal)"
-            },
-            new
-            {
-                name = "szticket",
-                type = 1,
-                description = "Post the application button message in this channel"
-            },
-            new
-            {
-                name = "szticketadm",
-                type = 1,
-                description = "Set this channel as admin ticket feed",
-                options = new[]
-                {
-                    new
-                    {
-                        name = "role",
-                        description = "Officer/Admin role that gets access to ticket channels",
-                        type = 8,
-                        required = false
-                    }
-                }
-            }
-        };
+        var commands = DiscordSlashCommands.Build();
 
         foreach (var cmd in commands)
         {
-            var resp = await http.PostAsJsonAsync(
-                $"https://discord.com/api/v10/applications/{appId}/commands", cmd);
-
+            var resp = await http.PostAsJsonAsync(baseUrl, cmd);
             if (!resp.IsSuccessStatusCode)
                 logger.LogWarning("Failed to register Discord command: {Status}", resp.StatusCode);
         }
 
-        logger.LogInformation("Discord slash commands registered successfully.");
+        logger.LogInformation("Discord slash commands registered successfully (scope: {Scope}).",
+            guildId is not null ? $"guild {guildId}" : "global");
     }
     catch (Exception ex)
     {
         logger.LogError(ex, "Failed to register Discord slash commands on startup.");
     }
 }
+

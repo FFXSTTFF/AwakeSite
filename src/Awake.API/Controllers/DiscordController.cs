@@ -64,64 +64,24 @@ public class DiscordController(
     {
         var botToken = configuration["Discord:BotToken"];
         var appId    = configuration["Discord:ApplicationId"];
+        var guildId  = configuration["Discord:GuildId"];
         if (string.IsNullOrWhiteSpace(botToken) || string.IsNullOrWhiteSpace(appId))
             return BadRequest("Discord:BotToken and Discord:ApplicationId must be configured.");
+
+        // Guild commands propagate instantly; global take up to 1 hour
+        var baseUrl = !string.IsNullOrWhiteSpace(guildId)
+            ? $"https://discord.com/api/v10/applications/{appId}/guilds/{guildId}/commands"
+            : $"https://discord.com/api/v10/applications/{appId}/commands";
 
         using var http = new HttpClient();
         http.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
 
-        var commands = new object[]
-        {
-            new
-            {
-                name = "ticket",
-                type = 1,
-                description = "Submit an application to join clan Awake [LOVE] (direct modal)"
-            },
-            new
-            {
-                name = "szticket",
-                type = 1,
-                description = "Post the application button message in this channel"
-            },
-            new
-            {
-                name = "szticketadm",
-                type = 1,
-                description = "Set this channel as admin ticket feed",
-                options = new[]
-                {
-                    new
-                    {
-                        name = "role",
-                        description = "Officer/Admin role that gets access to ticket channels",
-                        type = 8,      // ROLE
-                        required = false
-                    }
-                }
-            },
-            new
-            {
-                name = "loadout",
-                type = 1,
-                description = "Set your gear loadout for the recruitment application",
-                options = new object[]
-                {
-                    new { name = "weapon",      description = "Primary weapon",             type = 3, required = false, autocomplete = true },
-                    new { name = "weapon_rank", description = "Weapon upgrade level (0-15)", type = 4, required = false, min_value = 0, max_value = 15 },
-                    new { name = "armor",       description = "Armor",                      type = 3, required = false, autocomplete = true },
-                    new { name = "armor_rank",  description = "Armor upgrade level (0-15)",  type = 4, required = false, min_value = 0, max_value = 15 },
-                    new { name = "sniper",      description = "Sniper rifle (optional)",     type = 3, required = false, autocomplete = true },
-                    new { name = "sniper_rank", description = "Sniper upgrade level (0-15)", type = 4, required = false, min_value = 0, max_value = 15 }
-                }
-            }
-        };
+        var commands = DiscordSlashCommands.Build();
 
         var results = new List<string>();
         foreach (var cmd in commands)
         {
-            var resp = await http.PostAsJsonAsync(
-                $"https://discord.com/api/v10/applications/{appId}/commands", cmd);
+            var resp = await http.PostAsJsonAsync(baseUrl, cmd);
             if (resp.IsSuccessStatusCode)
             {
                 results.Add($"✅ OK");
@@ -133,7 +93,8 @@ public class DiscordController(
             }
         }
 
-        return Ok(string.Join("\n\n", results));
+        var scope = !string.IsNullOrWhiteSpace(guildId) ? $"guild {guildId}" : "global";
+        return Ok($"Scope: {scope}\n\n" + string.Join("\n\n", results));
     }
 
     // ── APPLICATION_COMMAND handlers ──────────────────────────────────────────
