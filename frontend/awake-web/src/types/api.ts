@@ -94,6 +94,21 @@ export interface Loadout {
   armor: LoadoutSlot
 }
 
+export interface ClanEntry {
+  clanName: string
+  clanTag: string
+  since: string
+}
+
+export interface PlayerProfile {
+  kills: number
+  deaths: number
+  kdRatio: number
+  accuracy: string
+  playtime: string
+  clanHistory: ClanEntry[]
+}
+
 export interface ItemSearchResult {
   id: string
   category: string
@@ -107,6 +122,6 @@ export interface TicketDetailDto extends TicketListItemDto {
   reviewedAt: string | null
   reviewedByUsername: string | null
   comments: TicketCommentDto[]
-  playerData: unknown | null
+  playerData: PlayerProfile | null
   loadout: Loadout | null
 }

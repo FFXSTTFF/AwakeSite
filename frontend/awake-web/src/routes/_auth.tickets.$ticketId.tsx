@@ -146,15 +146,33 @@ function TicketDetailPage() {
       {isOfficerPlus && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">{t('tickets.playerData')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('profile.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             {ticket.playerData ? (
-              <pre className="text-xs text-muted-foreground whitespace-pre-wrap bg-secondary rounded-md p-3">
-                {JSON.stringify(ticket.playerData, null, 2)}
-              </pre>
+              <div className="space-y-2.5">
+                <ProfileRow label={t('profile.kills')} value={ticket.playerData.kills.toLocaleString('ru-RU')} />
+                <ProfileRow label={t('profile.deaths')} value={ticket.playerData.deaths.toLocaleString('ru-RU')} />
+                <ProfileRow label={t('profile.kd')} value={ticket.playerData.kdRatio.toString()} />
+                <ProfileRow label={t('profile.accuracy')} value={ticket.playerData.accuracy} />
+                <ProfileRow label={t('profile.playtime')} value={ticket.playerData.playtime} />
+                {ticket.playerData.clanHistory.length > 0 && (
+                  <>
+                    <Separator />
+                    <p className="text-xs text-muted-foreground font-medium pt-0.5">
+                      {t('profile.clanHistory')}
+                    </p>
+                    {ticket.playerData.clanHistory.map((clan, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-accent shrink-0">[{clan.clanTag}]</span>
+                        <span className="text-sm text-foreground">{clan.clanName}</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
             ) : (
-              <p className="text-sm text-muted-foreground">{t('tickets.noPlayerData')}</p>
+              <p className="text-sm text-muted-foreground">{t('profile.unavailable')}</p>
             )}
           </CardContent>
         </Card>
@@ -223,6 +241,15 @@ function TicketDetailPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+function ProfileRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-xs text-muted-foreground w-28 shrink-0">{label}</span>
+      <span className="text-sm text-foreground">{value}</span>
     </div>
   )
 }
