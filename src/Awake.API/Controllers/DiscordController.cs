@@ -2,11 +2,14 @@ using System.Text;
 using System.Text.Json;
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
+using Awake.Application.Common.Models;
+using Awake.Application.Features.Items.Dtos;
 using Awake.Application.Features.Tickets.Commands.AddTicketComment;
 using Awake.Application.Features.Tickets.Commands.CreateDiscordTicket;
 using Awake.Application.Features.Tickets.Commands.UpdateTicketStatus;
 using Awake.Domain.Entities;
 using Awake.Domain.Enums;
+using Awake.Domain.ValueObjects;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using NSec.Cryptography;
@@ -21,6 +24,8 @@ public class DiscordController(
     IDiscordBotService discordBotService,
     IDiscordGuildSettingsRepository guildSettingsRepository,
     IHttpContextAccessor httpContextAccessor,
+    IPlayerDataAggregator playerDataAggregator,
+    IItemCacheService itemCacheService,
     ILogger<DiscordController> logger) : ControllerBase
 {
     // ── Main interaction endpoint ─────────────────────────────────────────────
@@ -341,9 +346,30 @@ public class DiscordController(
         var values = ExtractModalValues(root.GetProperty("data").GetProperty("components"));
         values.TryGetValue("game_nickname", out var nickname);
         values.TryGetValue("description", out var description);
+        values.TryGetValue("weapon_name", out var weaponName);
+        values.TryGetValue("armor_name", out var armorName);
+        values.TryGetValue("sniper_name", out var sniperName);
 
         if (string.IsNullOrWhiteSpace(nickname) || string.IsNullOrWhiteSpace(description))
             return Ok(Ephemeral("❌ Please fill in all fields."));
+
+        // Resolve loadout items from cache
+        var weaponItem = ResolveItem(weaponName, "weapon", "weapon/sniper_rifle");
+        var armorItem  = ResolveItem(armorName,  "armor");
+
+        if (weaponItem is null)
+            return Ok(Ephemeral($"❌ Weapon not found: **{weaponName}**. Check the name and try again."));
+        if (armorItem is null)
+            return Ok(Ephemeral($"❌ Armor not found: **{armorName}**. Check the name and try again."));
+
+        var sniperItem = string.IsNullOrWhiteSpace(sniperName) ? null : ResolveItem(sniperName, "weapon/sniper_rifle");
+        if (!string.IsNullOrWhiteSpace(sniperName) && sniperItem is null)
+            return Ok(Ephemeral($"❌ Sniper rifle not found: **{sniperName}**. Check the name or leave the field empty."));
+
+        var loadout = new Loadout(
+            sniperItem is null ? null : new LoadoutSlot(sniperItem.Id, sniperItem.NameRu, sniperItem.Icon),
+            new LoadoutSlot(weaponItem.Id, weaponItem.NameRu, weaponItem.Icon),
+            new LoadoutSlot(armorItem.Id,  armorItem.NameRu,  armorItem.Icon));
 
         // Create private ticket channel when guild settings exist
         string? ticketChannelId = null;
@@ -362,7 +388,7 @@ public class DiscordController(
         }
 
         var result = await mediator.Send(new CreateDiscordTicketCommand(
-            userId, username, nickname!, TicketType.Recruitment, description!, ticketChannelId));
+            userId, username, nickname!, TicketType.Recruitment, description!, ticketChannelId, loadout));
 
         if (!result.IsSuccess)
             return Ok(Ephemeral("❌ Failed to submit your ticket. Please try again."));
@@ -372,10 +398,14 @@ public class DiscordController(
         {
             var capturedGs = gs;
             var ticketId = result.Value;
+            var capturedAggregator = playerDataAggregator;
+            var capturedLoadout = loadout;
             _ = Task.Run(async () =>
             {
+                var pd = await capturedAggregator.GetPlayerDataAsync(nickname!);
                 await discordBotService.PostTicketEmbedAsync(
-                    ticketChannelId, ticketId, nickname!, description!, username);
+                    ticketChannelId, ticketId, nickname!, description!, username,
+                    loadout: capturedLoadout, playerProfile: pd.Profile);
 
                 if (capturedGs?.AdminChannelId is not null)
                     await discordBotService.PostAdminEmbedAsync(
@@ -492,6 +522,57 @@ public class DiscordController(
                         new
                         {
                             type = 4,
+                            custom_id = "weapon_name",
+                            label = "Primary weapon",
+                            style = 1,
+                            required = true,
+                            max_length = 100,
+                            placeholder = "e.g. АК-103 ВД «Аспид»"
+                        }
+                    }
+                },
+                new
+                {
+                    type = 1,
+                    components = new object[]
+                    {
+                        new
+                        {
+                            type = 4,
+                            custom_id = "armor_name",
+                            label = "Armor",
+                            style = 1,
+                            required = true,
+                            max_length = 100,
+                            placeholder = "e.g. «Берилл» М6А"
+                        }
+                    }
+                },
+                new
+                {
+                    type = 1,
+                    components = new object[]
+                    {
+                        new
+                        {
+                            type = 4,
+                            custom_id = "sniper_name",
+                            label = "Sniper rifle (optional)",
+                            style = 1,
+                            required = false,
+                            max_length = 100,
+                            placeholder = "Leave empty if none"
+                        }
+                    }
+                },
+                new
+                {
+                    type = 1,
+                    components = new object[]
+                    {
+                        new
+                        {
+                            type = 4,
                             custom_id = "description",
                             label = "Tell us about yourself",
                             style = 2,
@@ -539,6 +620,12 @@ public class DiscordController(
                 result[comp.GetProperty("custom_id").GetString()!] =
                     comp.GetProperty("value").GetString() ?? string.Empty;
         return result;
+    }
+
+    private ItemDto? ResolveItem(string? name, string categoryPrefix, string? excludeCategory = null)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return null;
+        return itemCacheService.Search(name.Trim(), categoryPrefix, excludeCategory).FirstOrDefault();
     }
 
     private async Task<byte[]> ReadBodyAsync()

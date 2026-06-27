@@ -205,6 +205,7 @@ public class DiscordBotService(
         string description,
         string discordUsername,
         Loadout? loadout = null,
+        PlayerProfile? playerProfile = null,
         CancellationToken ct = default)
     {
         if (!EnsureConfigured()) return;
@@ -217,6 +218,20 @@ public class DiscordBotService(
                 new { name = "Game Nickname", value = gameNickname, inline = true },
                 new { name = "Status", value = "⏳ Pending review", inline = false }
             };
+
+            if (playerProfile is not null)
+            {
+                fields.Add(new { name = "☠️ Убийства", value = playerProfile.Kills.ToString("N0"), inline = true });
+                fields.Add(new { name = "💀 Смерти", value = playerProfile.Deaths.ToString("N0"), inline = true });
+                fields.Add(new { name = "⚖️ К/Д", value = playerProfile.KdRatio.ToString("F2"), inline = true });
+                fields.Add(new { name = "🎯 Точность", value = playerProfile.Accuracy, inline = true });
+                fields.Add(new { name = "⏱️ Время в игре", value = playerProfile.Playtime, inline = true });
+                if (playerProfile.ClanHistory.Count > 0)
+                {
+                    var history = string.Join("\n", playerProfile.ClanHistory.Select(c => $"[{c.ClanTag}] {c.ClanName}"));
+                    fields.Add(new { name = "🏰 История кланов", value = history, inline = false });
+                }
+            }
 
             if (loadout is not null)
             {

@@ -26,6 +26,7 @@ public class CreateDiscordTicketCommandHandler(
             Description = request.Description,
             Status = TicketStatus.Pending,
             DiscordChannelId = request.DiscordChannelId,
+            Loadout = request.Loadout,
         };
 
         await ticketRepository.AddAsync(ticket, cancellationToken);

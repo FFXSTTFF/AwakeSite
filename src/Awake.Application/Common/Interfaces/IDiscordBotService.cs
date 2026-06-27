@@ -26,6 +26,7 @@ public interface IDiscordBotService
         string description,
         string discordUsername,
         Loadout? loadout = null,
+        PlayerProfile? playerProfile = null,
         CancellationToken ct = default);
 
     Task PostAdminEmbedAsync(
