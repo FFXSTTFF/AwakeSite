@@ -43,4 +43,5 @@ public interface IDiscordBotService
     Task FollowUpAsync(string applicationId, string interactionToken, string content, CancellationToken ct = default);
 
     Task PostCommentAsync(string channelId, string authorUsername, string content, CancellationToken ct = default);
+    Task PostMessageAsync(string channelId, string content, CancellationToken ct = default);
 }

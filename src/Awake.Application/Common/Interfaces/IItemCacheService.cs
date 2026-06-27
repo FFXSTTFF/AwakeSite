@@ -5,6 +5,7 @@ namespace Awake.Application.Common.Interfaces;
 public interface IItemCacheService
 {
     void Load(IEnumerable<ItemDto> items);
-    IEnumerable<ItemDto> Search(string q, string? categoryPrefix, string? excludeCategoryPrefix = null);
+    IEnumerable<ItemDto> Search(string q, string? categoryPrefix, string? excludeCategoryPrefix = null, int limit = 15);
+    ItemDto? GetById(string id);
     int Count { get; }
 }

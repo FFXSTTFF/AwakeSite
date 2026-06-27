@@ -51,6 +51,7 @@ public class DiscordController(
             1 => Ok(new { type = 1 }),
             2 => await HandleApplicationCommand(root),
             3 => await HandleMessageComponent(root),
+            4 => HandleAutocomplete(root),
             5 => await HandleModalSubmit(root),
             _ => Ok(new { type = 1 })
         };
@@ -98,6 +99,18 @@ public class DiscordController(
                         required = false
                     }
                 }
+            },
+            new
+            {
+                name = "loadout",
+                type = 1,
+                description = "Set your gear loadout for the recruitment application",
+                options = new object[]
+                {
+                    new { name = "weapon", description = "Primary weapon",           type = 3, required = true,  autocomplete = true },
+                    new { name = "armor",  description = "Armor",                    type = 3, required = true,  autocomplete = true },
+                    new { name = "sniper", description = "Sniper rifle (optional)",  type = 3, required = false, autocomplete = true }
+                }
             }
         };
 
@@ -125,6 +138,7 @@ public class DiscordController(
             "ticket"      => Ok(BuildTicketModal()),
             "szticket"    => await HandleSetupTicketChannel(guildId, channelId),
             "szticketadm" => await HandleSetupAdminChannel(root, guildId, channelId),
+            "loadout"     => await HandleLoadoutCommand(root),
             _             => Ok(new { type = 1 })
         };
     }
@@ -346,30 +360,9 @@ public class DiscordController(
         var values = ExtractModalValues(root.GetProperty("data").GetProperty("components"));
         values.TryGetValue("game_nickname", out var nickname);
         values.TryGetValue("description", out var description);
-        values.TryGetValue("weapon_name", out var weaponName);
-        values.TryGetValue("armor_name", out var armorName);
-        values.TryGetValue("sniper_name", out var sniperName);
 
         if (string.IsNullOrWhiteSpace(nickname) || string.IsNullOrWhiteSpace(description))
             return Ok(Ephemeral("❌ Please fill in all fields."));
-
-        // Resolve loadout items from cache
-        var weaponItem = ResolveItem(weaponName, "weapon", "weapon/sniper_rifle");
-        var armorItem  = ResolveItem(armorName,  "armor");
-
-        if (weaponItem is null)
-            return Ok(Ephemeral($"❌ Weapon not found: **{weaponName}**. Check the name and try again."));
-        if (armorItem is null)
-            return Ok(Ephemeral($"❌ Armor not found: **{armorName}**. Check the name and try again."));
-
-        var sniperItem = string.IsNullOrWhiteSpace(sniperName) ? null : ResolveItem(sniperName, "weapon/sniper_rifle");
-        if (!string.IsNullOrWhiteSpace(sniperName) && sniperItem is null)
-            return Ok(Ephemeral($"❌ Sniper rifle not found: **{sniperName}**. Check the name or leave the field empty."));
-
-        var loadout = new Loadout(
-            sniperItem is null ? null : new LoadoutSlot(sniperItem.Id, sniperItem.NameRu, sniperItem.Icon),
-            new LoadoutSlot(weaponItem.Id, weaponItem.NameRu, weaponItem.Icon),
-            new LoadoutSlot(armorItem.Id,  armorItem.NameRu,  armorItem.Icon));
 
         // Create private ticket channel when guild settings exist
         string? ticketChannelId = null;
@@ -388,7 +381,7 @@ public class DiscordController(
         }
 
         var result = await mediator.Send(new CreateDiscordTicketCommand(
-            userId, username, nickname!, TicketType.Recruitment, description!, ticketChannelId, loadout));
+            userId, username, nickname!, TicketType.Recruitment, description!, ticketChannelId));
 
         if (!result.IsSuccess)
             return Ok(Ephemeral("❌ Failed to submit your ticket. Please try again."));
@@ -399,13 +392,12 @@ public class DiscordController(
             var capturedGs = gs;
             var ticketId = result.Value;
             var capturedAggregator = playerDataAggregator;
-            var capturedLoadout = loadout;
             _ = Task.Run(async () =>
             {
                 var pd = await capturedAggregator.GetPlayerDataAsync(nickname!);
                 await discordBotService.PostTicketEmbedAsync(
                     ticketChannelId, ticketId, nickname!, description!, username,
-                    loadout: capturedLoadout, playerProfile: pd.Profile);
+                    playerProfile: pd.Profile);
 
                 if (capturedGs?.AdminChannelId is not null)
                     await discordBotService.PostAdminEmbedAsync(
@@ -414,10 +406,109 @@ public class DiscordController(
         }
 
         var reply = ticketChannelId is not null
-            ? $"✅ Application submitted! Head to <#{ticketChannelId}> to see your ticket."
-            : "✅ Application submitted! Officers will review it shortly.";
+            ? $"✅ Application submitted! Head to <#{ticketChannelId}> to see your ticket.\n📦 Use **/loadout** to add your gear (weapon, armor, sniper)."
+            : "✅ Application submitted! Officers will review it shortly.\n📦 Use **/loadout** to add your gear (weapon, armor, sniper).";
 
         return Ok(Ephemeral(reply));
+    }
+
+    // ── AUTOCOMPLETE (type 4) ─────────────────────────────────────────────────
+
+    private IActionResult HandleAutocomplete(JsonElement root)
+    {
+        var data = root.GetProperty("data");
+        if (data.GetProperty("name").GetString() != "loadout")
+            return Ok(new { type = 1 });
+
+        string? focusedName = null;
+        string focusedValue = "";
+        if (data.TryGetProperty("options", out var opts))
+        {
+            foreach (var opt in opts.EnumerateArray())
+            {
+                if (opt.TryGetProperty("focused", out var f) && f.GetBoolean())
+                {
+                    focusedName  = opt.GetProperty("name").GetString();
+                    focusedValue = opt.TryGetProperty("value", out var v) ? v.GetString() ?? "" : "";
+                    break;
+                }
+            }
+        }
+
+        var (category, exclude) = focusedName switch
+        {
+            "weapon" => ("weapon", (string?)"weapon/sniper_rifle"),
+            "armor"  => ("armor",  null),
+            "sniper" => ("weapon/sniper_rifle", null),
+            _        => ((string?)null, null)
+        };
+
+        if (category is null)
+            return Ok(new { type = 8, data = new { choices = Array.Empty<object>() } });
+
+        var choices = itemCacheService
+            .Search(focusedValue, category, exclude, limit: 25)
+            .Select(item => new { name = item.NameRu.Length > 100 ? item.NameRu[..100] : item.NameRu, value = item.Id })
+            .ToArray();
+
+        return Ok(new { type = 8, data = new { choices } });
+    }
+
+    // ── /loadout command ──────────────────────────────────────────────────────
+
+    private async Task<IActionResult> HandleLoadoutCommand(JsonElement root)
+    {
+        var (userId, username) = ExtractUser(root);
+
+        string? weaponId = null, armorId = null, sniperId = null;
+        if (root.GetProperty("data").TryGetProperty("options", out var options))
+        {
+            foreach (var opt in options.EnumerateArray())
+            {
+                var name  = opt.GetProperty("name").GetString();
+                var value = opt.TryGetProperty("value", out var v) ? v.GetString() : null;
+                switch (name)
+                {
+                    case "weapon": weaponId = value; break;
+                    case "armor":  armorId  = value; break;
+                    case "sniper": sniperId = value; break;
+                }
+            }
+        }
+
+        var weaponItem = weaponId is not null ? itemCacheService.GetById(weaponId) : null;
+        var armorItem  = armorId  is not null ? itemCacheService.GetById(armorId)  : null;
+
+        if (weaponItem is null || armorItem is null)
+            return Ok(Ephemeral("❌ Could not resolve selected items. Please try again."));
+
+        var sniperItem = sniperId is not null ? itemCacheService.GetById(sniperId) : null;
+
+        using var scope = httpContextAccessor.HttpContext!.RequestServices.CreateScope();
+        var ticketRepo = scope.ServiceProvider.GetRequiredService<ITicketRepository>();
+        var ticket = await ticketRepo.GetOpenByDiscordUserIdAsync(userId);
+
+        if (ticket is null)
+            return Ok(Ephemeral("❌ No active application found. Submit an application first using the **Submit Application** button."));
+
+        ticket.Loadout = new Loadout(
+            sniperItem is null ? null : new LoadoutSlot(sniperItem.Id, sniperItem.NameRu, sniperItem.Icon),
+            new LoadoutSlot(weaponItem.Id, weaponItem.NameRu, weaponItem.Icon),
+            new LoadoutSlot(armorItem.Id,  armorItem.NameRu,  armorItem.Icon));
+
+        await ticketRepo.UpdateAsync(ticket);
+
+        if (ticket.DiscordChannelId is not null)
+        {
+            var sniperText = sniperItem is not null ? $" / **{sniperItem.NameRu}**" : "";
+            var channelId  = ticket.DiscordChannelId;
+            _ = Task.Run(async () =>
+                await discordBotService.PostMessageAsync(
+                    channelId,
+                    $"📦 **{username}** set their loadout: **{weaponItem.NameRu}** / **{armorItem.NameRu}**{sniperText}"));
+        }
+
+        return Ok(Ephemeral("✅ Loadout saved! Officers will see it in your application."));
     }
 
     private async Task<IActionResult> HandleCloseChannel(JsonElement root)
@@ -522,57 +613,6 @@ public class DiscordController(
                         new
                         {
                             type = 4,
-                            custom_id = "weapon_name",
-                            label = "Primary weapon",
-                            style = 1,
-                            required = true,
-                            max_length = 100,
-                            placeholder = "e.g. АК-103 ВД «Аспид»"
-                        }
-                    }
-                },
-                new
-                {
-                    type = 1,
-                    components = new object[]
-                    {
-                        new
-                        {
-                            type = 4,
-                            custom_id = "armor_name",
-                            label = "Armor",
-                            style = 1,
-                            required = true,
-                            max_length = 100,
-                            placeholder = "e.g. «Берилл» М6А"
-                        }
-                    }
-                },
-                new
-                {
-                    type = 1,
-                    components = new object[]
-                    {
-                        new
-                        {
-                            type = 4,
-                            custom_id = "sniper_name",
-                            label = "Sniper rifle (optional)",
-                            style = 1,
-                            required = false,
-                            max_length = 100,
-                            placeholder = "Leave empty if none"
-                        }
-                    }
-                },
-                new
-                {
-                    type = 1,
-                    components = new object[]
-                    {
-                        new
-                        {
-                            type = 4,
                             custom_id = "description",
                             label = "Tell us about yourself",
                             style = 2,
@@ -620,12 +660,6 @@ public class DiscordController(
                 result[comp.GetProperty("custom_id").GetString()!] =
                     comp.GetProperty("value").GetString() ?? string.Empty;
         return result;
-    }
-
-    private ItemDto? ResolveItem(string? name, string categoryPrefix, string? excludeCategory = null)
-    {
-        if (string.IsNullOrWhiteSpace(name)) return null;
-        return itemCacheService.Search(name.Trim(), categoryPrefix, excludeCategory).FirstOrDefault();
     }
 
     private async Task<byte[]> ReadBodyAsync()

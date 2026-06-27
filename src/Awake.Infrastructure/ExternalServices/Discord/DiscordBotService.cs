@@ -425,6 +425,20 @@ public class DiscordBotService(
         }
     }
 
+    public async Task PostMessageAsync(string channelId, string content, CancellationToken ct = default)
+    {
+        if (!EnsureConfigured()) return;
+        SetAuth();
+        try
+        {
+            await httpClient.PostAsJsonAsync($"{ApiBase}/channels/{channelId}/messages", new { content }, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to post message to {ChannelId}", channelId);
+        }
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task<string?> OpenDmChannelAsync(string userId, CancellationToken ct)

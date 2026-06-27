@@ -15,11 +15,14 @@ public class ItemCacheService : IItemCacheService
     public void Load(IEnumerable<ItemDto> items) =>
         _items = items.ToDictionary(x => x.Id);
 
-    public IEnumerable<ItemDto> Search(string q, string? categoryPrefix, string? excludeCategoryPrefix = null) =>
+    public IEnumerable<ItemDto> Search(string q, string? categoryPrefix, string? excludeCategoryPrefix = null, int limit = 15) =>
         _items.Values
             .Where(x => AllowedColors.Contains(x.Color))
             .Where(x => categoryPrefix == null || x.Category.StartsWith(categoryPrefix))
             .Where(x => excludeCategoryPrefix == null || !x.Category.StartsWith(excludeCategoryPrefix))
             .Where(x => string.IsNullOrEmpty(q) || x.NameRu.Contains(q, StringComparison.OrdinalIgnoreCase))
-            .Take(15);
+            .Take(limit);
+
+    public ItemDto? GetById(string id) =>
+        _items.TryGetValue(id, out var item) ? item : null;
 }

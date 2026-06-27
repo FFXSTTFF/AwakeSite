@@ -1,5 +1,6 @@
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Domain.Entities;
+using Awake.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Awake.Infrastructure.Persistence.Repositories;
@@ -49,4 +50,13 @@ public class TicketRepository(AppDbContext context) : ITicketRepository
     public async Task<Ticket?> GetByDiscordChannelIdAsync(string channelId, CancellationToken ct = default)
         => await context.Tickets
             .FirstOrDefaultAsync(t => t.DiscordChannelId == channelId, ct);
+
+    public async Task<Ticket?> GetOpenByDiscordUserIdAsync(string discordUserId, CancellationToken ct = default)
+        => await context.Tickets
+            .Where(t => t.DiscordUserId == discordUserId &&
+                        t.Status != TicketStatus.Approved &&
+                        t.Status != TicketStatus.Rejected &&
+                        t.Status != TicketStatus.Closed)
+            .OrderByDescending(t => t.CreatedAt)
+            .FirstOrDefaultAsync(ct);
 }
