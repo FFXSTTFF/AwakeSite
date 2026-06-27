@@ -4,20 +4,17 @@ import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { ticketsApi } from '@/api/tickets'
 import { TicketType } from '@/types/api'
+import type { LoadoutSlot, Loadout } from '@/types/api'
+import { ItemCombobox } from '@/components/ItemCombobox'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { UserPlus, RotateCcw, ArrowLeft, Send } from 'lucide-react'
+import { ArrowLeft, Send } from 'lucide-react'
 
 export const Route = createFileRoute('/_auth/tickets/new')({
   component: NewTicketPage,
 })
-
-const TICKET_TYPES = [
-  { value: TicketType.Recruitment, icon: UserPlus, labelKey: 'tickets.types.0', desc: 'Хочу вступить в клан Awake [LOVE]' },
-  { value: TicketType.Appeal, icon: RotateCcw, labelKey: 'tickets.types.1', desc: 'Апелляция на кик или бан' },
-] as const
 
 function NewTicketPage() {
   const { t } = useTranslation()
@@ -25,12 +22,26 @@ function NewTicketPage() {
   const queryClient = useQueryClient()
 
   const [gameNickname, setGameNickname] = useState('')
-  const [type, setType] = useState<TicketType>(TicketType.Recruitment)
   const [description, setDescription] = useState('')
+  const [sniper, setSniper] = useState<LoadoutSlot | null>(null)
+  const [weapon, setWeapon] = useState<LoadoutSlot | null>(null)
+  const [armor, setArmor] = useState<LoadoutSlot | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const createTicket = useMutation({
-    mutationFn: () => ticketsApi.create({ gameNickname, type, description }),
+    mutationFn: () => {
+      const loadout: Loadout = {
+        sniper,
+        weapon: weapon!,
+        armor: armor!,
+      }
+      return ticketsApi.create({
+        gameNickname,
+        type: TicketType.Recruitment,
+        description,
+        loadout,
+      })
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tickets'] })
       void navigate({ to: '/tickets' })
@@ -40,9 +51,12 @@ function NewTicketPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!weapon || !armor) return
     setError(null)
     createTicket.mutate()
   }
+
+  const canSubmit = !!weapon && !!armor && !!gameNickname.trim() && !!description.trim()
 
   return (
     <div className="max-w-xl mx-auto">
@@ -60,33 +74,6 @@ function NewTicketPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Type selector */}
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                {t('tickets.type')}
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {TICKET_TYPES.map(({ value, icon: Icon, labelKey, desc }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setType(value)}
-                    className={`flex flex-col items-start gap-1.5 p-4 rounded-lg border text-left transition-all ${
-                      type === value
-                        ? 'border-accent/50 bg-accent/8 ring-1 ring-accent/30'
-                        : 'border-border bg-card hover:bg-secondary'
-                    }`}
-                  >
-                    <Icon size={17} className={type === value ? 'text-accent' : 'text-muted-foreground'} />
-                    <span className={`text-sm font-semibold ${type === value ? 'text-accent' : 'text-foreground'}`}>
-                      {t(labelKey)}
-                    </span>
-                    <span className="text-xs text-muted-foreground leading-snug">{desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Nickname */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-muted-foreground">
@@ -112,12 +99,52 @@ function NewTicketPage() {
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={6}
+                rows={5}
                 required
                 maxLength={2000}
                 placeholder="Расскажи о себе — опыт, достижения, почему хочешь в клан..."
                 className="resize-none"
               />
+            </div>
+
+            {/* Loadout */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-muted-foreground">
+                {t('tickets.loadout.title')}
+              </label>
+
+              <div className="space-y-1.5">
+                <p className="text-xs text-muted-foreground">{t('tickets.loadout.sniperOptional')}</p>
+                <ItemCombobox
+                  categoryPrefix="weapon/sniper_rifle"
+                  placeholder={t('tickets.loadout.search')}
+                  value={sniper}
+                  onChange={setSniper}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <p className="text-xs text-muted-foreground">{t('tickets.loadout.weapon')} *</p>
+                <ItemCombobox
+                  categoryPrefix="weapon"
+                  excludeCategory="weapon/sniper_rifle"
+                  placeholder={t('tickets.loadout.search')}
+                  value={weapon}
+                  onChange={setWeapon}
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <p className="text-xs text-muted-foreground">{t('tickets.loadout.armor')} *</p>
+                <ItemCombobox
+                  categoryPrefix="armor"
+                  placeholder={t('tickets.loadout.search')}
+                  value={armor}
+                  onChange={setArmor}
+                  required
+                />
+              </div>
             </div>
 
             {error && (
@@ -126,7 +153,11 @@ function NewTicketPage() {
               </div>
             )}
 
-            <Button type="submit" disabled={createTicket.isPending} className="w-full">
+            <Button
+              type="submit"
+              disabled={createTicket.isPending || !canSubmit}
+              className="w-full"
+            >
               <Send size={15} />
               {createTicket.isPending ? t('common.loading') : t('tickets.submit')}
             </Button>
