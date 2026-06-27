@@ -43,8 +43,8 @@ public static class DependencyInjection
         services.AddHostedService<ItemSyncHostedService>();
 
         // Player data sources
-        services.AddScoped<IPlayerDataSource, StubDataSource>();
-        services.AddScoped<IPlayerDataAggregator, PlayerDataAggregator>();
+        services.AddSingleton<IPlayerDataSource, StubDataSource>();
+        services.AddSingleton<IPlayerDataAggregator, PlayerDataAggregator>();
 
         // Identity services
         services.AddScoped<IPasswordHasher, PasswordHasherService>();

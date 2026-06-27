@@ -4,8 +4,9 @@ using Awake.Application.Common.Models;
 using Awake.Application.Features.Tickets.Queries.GetTicketById;
 using Awake.Domain.Entities;
 using Awake.Domain.Enums;
-using Moq;
+using Awake.Domain.ValueObjects;
 using FluentAssertions;
+using Moq;
 
 namespace Awake.Unit.Tests.Features.Tickets;
 
@@ -54,7 +55,8 @@ public class GetTicketByIdQueryHandlerTests
         var authorId = Guid.NewGuid();
         var officerId = Guid.NewGuid();
         var ticket = MakeTicket(authorId);
-        var playerResult = new PlayerDataResult("AliceGame", []);
+        var profile = new PlayerProfile(1000, 500, 2.0, "75%", "100 days", []);
+        var playerResult = new PlayerDataResult("AliceGame", profile);
 
         _repo.Setup(r => r.GetByIdWithDetailsAsync(ticket.Id, It.IsAny<CancellationToken>()))
              .ReturnsAsync(ticket);
@@ -67,6 +69,7 @@ public class GetTicketByIdQueryHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.PlayerData.Should().NotBeNull();
+        result.Value.PlayerData!.Kills.Should().Be(1000);
         _playerData.Verify(p => p.GetPlayerDataAsync("AliceGame", It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -85,6 +88,8 @@ public class GetTicketByIdQueryHandlerTests
              .ReturnsAsync(ticket);
         _currentUser.Setup(s => s.UserId).Returns(officerId);
         _currentUser.Setup(s => s.Rank).Returns(UserRank.Officer);
+        _playerData.Setup(p => p.GetPlayerDataAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                   .ReturnsAsync(new PlayerDataResult("AliceGame", null));
         _userRepo.Setup(r => r.GetByIdAsync(officerId, It.IsAny<CancellationToken>()))
                  .ReturnsAsync(officerUser);
 

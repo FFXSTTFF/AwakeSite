@@ -3,6 +3,7 @@ using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Common.Models;
 using Awake.Application.Features.Tickets.Dtos;
 using Awake.Domain.Enums;
+using Awake.Domain.ValueObjects;
 using MediatR;
 
 namespace Awake.Application.Features.Tickets.Queries.GetTicketById;
@@ -27,11 +28,11 @@ public class GetTicketByIdQueryHandler(
         if (!isOfficerPlus && !isAuthor)
             return Result<TicketDetailDto>.Failure("Нет доступа к этому тикету.");
 
-        object? playerData = null;
+        PlayerProfile? playerData = null;
         if (isOfficerPlus)
         {
             var pd = await playerDataAggregator.GetPlayerDataAsync(ticket.GameNickname, cancellationToken);
-            playerData = pd;
+            playerData = pd.Profile;
         }
 
         string? reviewedByUsername = null;

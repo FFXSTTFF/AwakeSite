@@ -14,6 +14,6 @@ public record TicketDetailDto(
     DateTime? ReviewedAt,
     string? ReviewedByUsername,
     IReadOnlyList<TicketCommentDto> Comments,
-    object? PlayerData,
+    PlayerProfile? PlayerData,
     Loadout? Loadout
 );
