@@ -179,18 +179,25 @@ function TicketDetailPage() {
       )}
 
       {/* Loadout */}
-      {ticket.loadout && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">{t('tickets.loadout.title')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2.5">
-            <LoadoutRow label={t('tickets.loadout.sniper')} slot={ticket.loadout.sniper} emptyText={t('tickets.loadout.noSniper')} />
-            <LoadoutRow label={t('tickets.loadout.weapon')} slot={ticket.loadout.weapon} />
-            <LoadoutRow label={t('tickets.loadout.armor')} slot={ticket.loadout.armor} />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">{t('tickets.loadout.title')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2.5">
+          {ticket.loadout ? (
+            <>
+              <LoadoutRow label={t('tickets.loadout.sniper')} slot={ticket.loadout.sniper} emptyText={t('tickets.loadout.noSniper')} />
+              <LoadoutRow label={t('tickets.loadout.weapon')} slot={ticket.loadout.weapon} />
+              <LoadoutRow label={t('tickets.loadout.armor')} slot={ticket.loadout.armor} />
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {t('tickets.loadout.notSet')}{' '}
+              <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">/loadout</code>
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Comments */}
       <Card>
@@ -267,6 +274,9 @@ function LoadoutRow({ label, slot, emptyText }: { label: string; slot: LoadoutSl
             onError={(e) => (e.currentTarget.style.display = 'none')}
           />
           <span className="text-sm text-foreground">{slot.itemName}</span>
+          {slot.upgrade > 0 && (
+            <span className="text-xs font-medium text-accent">+{slot.upgrade}</span>
+          )}
         </div>
       ) : (
         <span className="text-sm text-muted-foreground">{emptyText ?? '—'}</span>

@@ -86,6 +86,7 @@ export interface LoadoutSlot {
   itemId: string
   itemName: string
   itemIcon: string
+  upgrade: number
 }
 
 export interface Loadout {

@@ -235,9 +235,13 @@ public class DiscordBotService(
 
             if (loadout is not null)
             {
-                fields.Add(new { name = "🎯 Снайперка", value = loadout.Sniper?.ItemName ?? "—", inline = true });
-                fields.Add(new { name = "⚔️ Основное оружие", value = loadout.Weapon.ItemName, inline = true });
-                fields.Add(new { name = "🛡️ Броня", value = loadout.Armor.ItemName, inline = true });
+                static string SlotDisplay(LoadoutSlot s) =>
+                    s.Upgrade > 0 ? $"{s.ItemName} (+{s.Upgrade})" : s.ItemName;
+
+                if (loadout.Sniper is not null)
+                    fields.Add(new { name = "🎯 Снайперка", value = SlotDisplay(loadout.Sniper), inline = true });
+                fields.Add(new { name = "⚔️ Основное оружие", value = SlotDisplay(loadout.Weapon), inline = true });
+                fields.Add(new { name = "🛡️ Броня",           value = SlotDisplay(loadout.Armor),  inline = true });
             }
 
             var payload = new

@@ -1,3 +1,3 @@
 namespace Awake.Domain.ValueObjects;
 
-public record LoadoutSlot(string ItemId, string ItemName, string ItemIcon);
+public record LoadoutSlot(string ItemId, string ItemName, string ItemIcon, int Upgrade = 0);

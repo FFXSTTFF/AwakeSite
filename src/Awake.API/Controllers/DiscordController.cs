@@ -107,9 +107,12 @@ public class DiscordController(
                 description = "Set your gear loadout for the recruitment application",
                 options = new object[]
                 {
-                    new { name = "weapon", description = "Primary weapon",           type = 3, required = true,  autocomplete = true },
-                    new { name = "armor",  description = "Armor",                    type = 3, required = true,  autocomplete = true },
-                    new { name = "sniper", description = "Sniper rifle (optional)",  type = 3, required = false, autocomplete = true }
+                    new { name = "weapon",      description = "Primary weapon",              type = 3, required = true,  autocomplete = true },
+                    new { name = "weapon_rank", description = "Weapon upgrade level (0–15)", type = 4, required = false, min_value = 0, max_value = 15 },
+                    new { name = "armor",       description = "Armor",                       type = 3, required = true,  autocomplete = true },
+                    new { name = "armor_rank",  description = "Armor upgrade level (0–15)",  type = 4, required = false, min_value = 0, max_value = 15 },
+                    new { name = "sniper",      description = "Sniper rifle (optional)",      type = 3, required = false, autocomplete = true },
+                    new { name = "sniper_rank", description = "Sniper upgrade level (0–15)", type = 4, required = false, min_value = 0, max_value = 15 }
                 }
             }
         };
@@ -399,6 +402,16 @@ public class DiscordController(
                     ticketChannelId, ticketId, nickname!, description!, username,
                     playerProfile: pd.Profile);
 
+                await discordBotService.PostMessageAsync(ticketChannelId,
+                    "📦 **Укажи своё снаряжение командой `/loadout`:**\n" +
+                    "• **weapon** — основное оружие (с автодополнением)\n" +
+                    "• **weapon_rank** — уровень заточки оружия (0–15)\n" +
+                    "• **armor** — броня (с автодополнением)\n" +
+                    "• **armor_rank** — уровень заточки брони (0–15)\n" +
+                    "• **sniper** — снайперка (необязательно)\n" +
+                    "• **sniper_rank** — уровень заточки снайперки (0–15)\n\n" +
+                    "Пример: `/loadout weapon:АК-103 weapon_rank:15 armor:Берилл armor_rank:10`");
+
                 if (capturedGs?.AdminChannelId is not null)
                     await discordBotService.PostAdminEmbedAsync(
                         capturedGs.AdminChannelId, ticketChannelId, nickname!, username);
@@ -461,17 +474,20 @@ public class DiscordController(
         var (userId, username) = ExtractUser(root);
 
         string? weaponId = null, armorId = null, sniperId = null;
+        int weaponRank = 0, armorRank = 0, sniperRank = 0;
         if (root.GetProperty("data").TryGetProperty("options", out var options))
         {
             foreach (var opt in options.EnumerateArray())
             {
-                var name  = opt.GetProperty("name").GetString();
-                var value = opt.TryGetProperty("value", out var v) ? v.GetString() : null;
+                var name = opt.GetProperty("name").GetString();
                 switch (name)
                 {
-                    case "weapon": weaponId = value; break;
-                    case "armor":  armorId  = value; break;
-                    case "sniper": sniperId = value; break;
+                    case "weapon":      weaponId   = opt.TryGetProperty("value", out var v1) ? v1.GetString() : null; break;
+                    case "weapon_rank": weaponRank = opt.TryGetProperty("value", out var v2) ? v2.GetInt32()  : 0;    break;
+                    case "armor":       armorId    = opt.TryGetProperty("value", out var v3) ? v3.GetString() : null; break;
+                    case "armor_rank":  armorRank  = opt.TryGetProperty("value", out var v4) ? v4.GetInt32()  : 0;    break;
+                    case "sniper":      sniperId   = opt.TryGetProperty("value", out var v5) ? v5.GetString() : null; break;
+                    case "sniper_rank": sniperRank = opt.TryGetProperty("value", out var v6) ? v6.GetInt32()  : 0;    break;
                 }
             }
         }
@@ -492,20 +508,21 @@ public class DiscordController(
             return Ok(Ephemeral("❌ No active application found. Submit an application first using the **Submit Application** button."));
 
         ticket.Loadout = new Loadout(
-            sniperItem is null ? null : new LoadoutSlot(sniperItem.Id, sniperItem.NameRu, sniperItem.Icon),
-            new LoadoutSlot(weaponItem.Id, weaponItem.NameRu, weaponItem.Icon),
-            new LoadoutSlot(armorItem.Id,  armorItem.NameRu,  armorItem.Icon));
+            sniperItem is null ? null : new LoadoutSlot(sniperItem.Id, sniperItem.NameRu, sniperItem.Icon, sniperRank),
+            new LoadoutSlot(weaponItem.Id, weaponItem.NameRu, weaponItem.Icon, weaponRank),
+            new LoadoutSlot(armorItem.Id,  armorItem.NameRu,  armorItem.Icon,  armorRank));
 
         await ticketRepo.UpdateAsync(ticket);
 
         if (ticket.DiscordChannelId is not null)
         {
-            var sniperText = sniperItem is not null ? $" / **{sniperItem.NameRu}**" : "";
+            static string Slot(string name, int rank) => rank > 0 ? $"**{name}** (+{rank})" : $"**{name}**";
+            var sniperText = sniperItem is not null ? $" / {Slot(sniperItem.NameRu, sniperRank)}" : "";
             var channelId  = ticket.DiscordChannelId;
             _ = Task.Run(async () =>
                 await discordBotService.PostMessageAsync(
                     channelId,
-                    $"📦 **{username}** set their loadout: **{weaponItem.NameRu}** / **{armorItem.NameRu}**{sniperText}"));
+                    $"📦 **{username}** updated loadout: {Slot(weaponItem.NameRu, weaponRank)} / {Slot(armorItem.NameRu, armorRank)}{sniperText}"));
         }
 
         return Ok(Ephemeral("✅ Loadout saved! Officers will see it in your application."));
