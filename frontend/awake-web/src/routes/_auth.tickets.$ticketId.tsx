@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { ticketsApi } from '@/api/tickets'
 import { TicketStatus, UserRank } from '@/types/api'
+import type { LoadoutSlot } from '@/types/api'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -11,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/tickets/$ticketId')({
   component: TicketDetailPage,
@@ -158,6 +160,20 @@ function TicketDetailPage() {
         </Card>
       )}
 
+      {/* Loadout */}
+      {ticket.loadout && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">{t('tickets.loadout.title')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            <LoadoutRow label={t('tickets.loadout.sniper')} slot={ticket.loadout.sniper} emptyText={t('tickets.loadout.noSniper')} />
+            <LoadoutRow label={t('tickets.loadout.weapon')} slot={ticket.loadout.weapon} />
+            <LoadoutRow label={t('tickets.loadout.armor')} slot={ticket.loadout.armor} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Comments */}
       <Card>
         <CardHeader className="pb-3">
@@ -207,6 +223,27 @@ function TicketDetailPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+function LoadoutRow({ label, slot, emptyText }: { label: string; slot: LoadoutSlot | null; emptyText?: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-xs text-muted-foreground w-32 shrink-0">{label}</span>
+      {slot ? (
+        <div className="flex items-center gap-2 flex-1">
+          <img
+            src={slot.itemIcon}
+            alt=""
+            className="w-6 h-6 object-contain shrink-0"
+            onError={(e) => (e.currentTarget.style.display = 'none')}
+          />
+          <span className="text-sm text-foreground">{slot.itemName}</span>
+        </div>
+      ) : (
+        <span className="text-sm text-muted-foreground">{emptyText ?? '—'}</span>
+      )}
     </div>
   )
 }
