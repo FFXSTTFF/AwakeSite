@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: awake_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      ConnectionStrings__Postgres: "Host=db;Port=5432;Database=awake_dev;Username=postgres;Password=postgres"
+      Jwt__Secret: "local-docker-secret-32chars-here!!"
+      Discord__BotToken: ""
+      Discord__ApplicationId: ""
+      Discord__PublicKey: ""
+      Cors__AllowedOrigin: "http://localhost:5173"
+      PLAYWRIGHT_CHROMIUM_PATH: "/usr/bin/chromium"
+    depends_on:
+      db:
+        condition: service_healthy

@@ -5,6 +5,8 @@ using Awake.API.Services;
 using Awake.Application;
 using Awake.Application.Common.Interfaces;
 using Awake.Infrastructure;
+using Awake.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,7 +52,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// 7. Auto-register Discord slash commands on startup
+// 7. Apply EF Core migrations on startup (safe — idempotent)
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+}
+
+// 8. Auto-register Discord slash commands on startup
 await RegisterDiscordCommandsAsync(app);
 
 app.Run();
