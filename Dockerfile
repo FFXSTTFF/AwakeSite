@@ -12,14 +12,18 @@ RUN dotnet restore "src/Awake.API/Awake.API.csproj"
 COPY . .
 RUN dotnet publish "src/Awake.API/Awake.API.csproj" -c Release -o /publish --no-restore
 
-# playwright.sh is only in build output (not publish output) — run it from there
-RUN src/Awake.API/bin/Release/net10.0/playwright.sh install --with-deps chromium
+# Python playwright 1.51.0 downloads the same Chromium revision as Microsoft.Playwright 1.51.0
+# Both use ~/.cache/ms-playwright/ — so .NET Playwright finds the browser automatically
+RUN apt-get update && apt-get install -y --no-install-recommends python3-pip \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip3 install playwright==1.51.0 --break-system-packages \
+    && playwright install --with-deps chromium
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Minimal Chromium runtime libs (Ubuntu Noble)
+# Chromium runtime dependencies (Ubuntu Noble)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
     libdbus-1-3 libxkbcommon0 libx11-6 libxcomposite1 libxdamage1 \
@@ -27,7 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2t64 \
     && rm -rf /var/lib/apt/lists/*
 
-# Playwright browser cache from build stage (no external download at runtime)
+# Copy Playwright browser cache from build stage
 COPY --from=build /root/.cache/ms-playwright /root/.cache/ms-playwright
 
 COPY --from=build /publish .
