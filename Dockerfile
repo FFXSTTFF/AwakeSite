@@ -12,8 +12,8 @@ RUN dotnet restore "src/Awake.API/Awake.API.csproj"
 COPY . .
 RUN dotnet publish "src/Awake.API/Awake.API.csproj" -c Release -o /publish --no-restore
 
-# Install Playwright Chromium using the script shipped with the NuGet package
-RUN /publish/playwright.sh install --with-deps chromium
+# playwright.sh is only in build output (not publish output) — run it from there
+RUN src/Awake.API/bin/Release/net10.0/playwright.sh install --with-deps chromium
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
