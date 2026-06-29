@@ -24,7 +24,6 @@ services:
       Discord__ApplicationId: ""
       Discord__PublicKey: ""
       Cors__AllowedOrigin: "http://localhost:5173"
-      PLAYWRIGHT_CHROMIUM_PATH: "/usr/bin/chromium"
     depends_on:
       db:
         condition: service_healthy
