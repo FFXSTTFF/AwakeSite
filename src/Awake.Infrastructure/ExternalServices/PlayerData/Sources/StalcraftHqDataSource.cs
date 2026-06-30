@@ -43,7 +43,11 @@ public sealed class StalcraftHqDataSource(ILogger<StalcraftHqDataSource> logger)
             {
                 var url = $"{BaseUrl}/characters/{Server}/{Uri.EscapeDataString(nickname)}";
                 logger.LogInformation("Navigating to {Url}", url);
-                var response = await page.GotoAsync(url, new PageGotoOptions { Timeout = 15_000 });
+                var response = await page.GotoAsync(url, new PageGotoOptions
+                {
+                    Timeout   = 30_000,
+                    WaitUntil = WaitUntilState.DOMContentLoaded
+                });
 
                 logger.LogInformation("Page response status: {Status}", response?.Status);
                 if (response is null || !response.Ok) return null;
