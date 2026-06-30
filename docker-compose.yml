@@ -17,6 +17,9 @@ services:
     build: .
     ports:
       - "8080:8080"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       ConnectionStrings__Postgres: "Host=db;Port=5432;Database=awake_dev;Username=postgres;Password=postgres"
       Jwt__Secret: "local-docker-secret-32chars-here!!"
