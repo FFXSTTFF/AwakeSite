@@ -18,6 +18,7 @@ public sealed class StalcraftHqDataSource(ILogger<StalcraftHqDataSource> logger)
 
     public async Task<PlayerProfile?> TryGetDataAsync(string nickname, CancellationToken ct = default)
     {
+        logger.LogInformation("Fetching player profile via Playwright for {Nickname}", nickname);
         try
         {
             var browser = await GetBrowserAsync(ct);
@@ -25,23 +26,36 @@ public sealed class StalcraftHqDataSource(ILogger<StalcraftHqDataSource> logger)
             {
                 UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
                             "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                            "Chrome/125.0.0.0 Safari/537.36"
+                            "Chrome/125.0.0.0 Safari/537.36",
+                ViewportSize = new ViewportSize { Width = 1920, Height = 1080 },
+                Locale    = "ru-RU"
             });
+
+            // Patch navigator to look like a real browser, not a bot
+            await context.AddInitScriptAsync("""
+                Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                Object.defineProperty(navigator, 'plugins',   { get: () => [1, 2, 3, 4, 5] });
+                Object.defineProperty(navigator, 'languages', { get: () => ['ru-RU', 'ru', 'en-US', 'en'] });
+                """);
 
             var page = await context.NewPageAsync();
             try
             {
                 var url = $"{BaseUrl}/characters/{Server}/{Uri.EscapeDataString(nickname)}";
+                logger.LogInformation("Navigating to {Url}", url);
                 var response = await page.GotoAsync(url, new PageGotoOptions { Timeout = 15_000 });
 
+                logger.LogInformation("Page response status: {Status}", response?.Status);
                 if (response is null || !response.Ok) return null;
 
-                // Wait for the stats definition list to render
                 try { await page.WaitForSelectorAsync("dt", new PageWaitForSelectorOptions { Timeout = 10_000 }); }
-                catch (TimeoutException) { /* page may genuinely have no stats */ }
+                catch (TimeoutException) { logger.LogWarning("Timeout waiting for <dt> — page has no stats section"); }
 
                 var html = await page.ContentAsync();
-                return Parse(html);
+                logger.LogInformation("Got HTML ({Length} chars), parsing...", html.Length);
+                var profile = Parse(html);
+                logger.LogInformation("Parse result: {Result}", profile is null ? "null" : $"kills={profile.Kills}");
+                return profile;
             }
             finally
             {
@@ -66,14 +80,20 @@ public sealed class StalcraftHqDataSource(ILogger<StalcraftHqDataSource> logger)
 
             _playwright = await Playwright.CreateAsync();
 
-            // PLAYWRIGHT_CHROMIUM_PATH lets Railway/Docker point to a system Chromium
             var execPath = Environment.GetEnvironmentVariable("PLAYWRIGHT_CHROMIUM_PATH");
 
             _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless     = true,
+                Headless       = true,
                 ExecutablePath = string.IsNullOrEmpty(execPath) ? null : execPath,
-                Args         = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+                Args           =
+                [
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    // Prevent bot detection via navigator.webdriver flag
+                    "--disable-blink-features=AutomationControlled"
+                ]
             });
 
             return _browser;
