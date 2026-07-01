@@ -27,6 +27,7 @@ services:
       Discord__ApplicationId: ""
       Discord__PublicKey: ""
       Cors__AllowedOrigin: "http://localhost:5173"
+      StalcraftApi__Token: ""
     depends_on:
       db:
         condition: service_healthy

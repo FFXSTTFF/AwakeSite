@@ -1,89 +1,85 @@
+using System.Text.Json;
 using Awake.Infrastructure.ExternalServices.PlayerData.Sources;
 using FluentAssertions;
 
 namespace Awake.Unit.Tests.Features.PlayerData;
 
-public class StalcraftHqDataSourceTests
+public class StalcraftApiDataSourceTests
 {
-    private const string ValidHtml = """
-        <html><body>
-          <dl>
-            <div><dt>Kills:</dt><dd>121 559</dd></div>
-            <div><dt>Deaths:</dt><dd>48 879</dd></div>
-            <div><dt>Accuracy:</dt><dd>86%</dd></div>
-          </dl>
-          <p>In-game for 388 days, 5 hours and 45 minutes</p>
-          <div><span>[HARD] Try Hard</span></div>
-          <div><span>[LOVE] Awake</span></div>
-        </body></html>
+    private static JsonElement MakeJson(string json) =>
+        JsonSerializer.Deserialize<JsonElement>(json);
+
+    private const string FullProfileJson = """
+        {
+          "stats": [
+            { "id": "kil",     "value": 121559 },
+            { "id": "dea",     "value": 48879  },
+            { "id": "sho-fir", "value": 1000000 },
+            { "id": "sho-hit", "value": 860000  },
+            { "id": "pla-tim", "value": 33543900000 }
+          ],
+          "clan": {
+            "info": { "name": "Awake", "tag": "LOVE" }
+          }
+        }
         """;
 
-    private const string EmptyHtml = "<html><body><p>Player not found</p></body></html>";
-
     [Fact]
-    public void Parse_ValidHtml_ReturnsCorrectKills()
+    public void Parse_ValidJson_ReturnsCorrectKills()
     {
-        var profile = StalcraftHqDataSource.Parse(ValidHtml);
+        var profile = StalcraftApiDataSource.ParseProfile(MakeJson(FullProfileJson));
         profile!.Kills.Should().Be(121559);
     }
 
     [Fact]
-    public void Parse_ValidHtml_ReturnsCorrectDeaths()
+    public void Parse_ValidJson_ReturnsCorrectDeaths()
     {
-        var profile = StalcraftHqDataSource.Parse(ValidHtml);
+        var profile = StalcraftApiDataSource.ParseProfile(MakeJson(FullProfileJson));
         profile!.Deaths.Should().Be(48879);
     }
 
     [Fact]
-    public void Parse_ValidHtml_ComputesKdRatio()
+    public void Parse_ValidJson_ComputesKdRatio()
     {
-        var profile = StalcraftHqDataSource.Parse(ValidHtml);
+        var profile = StalcraftApiDataSource.ParseProfile(MakeJson(FullProfileJson));
         profile!.KdRatio.Should().Be(Math.Round(121559.0 / 48879.0, 2));
     }
 
     [Fact]
-    public void Parse_ValidHtml_ReturnsAccuracy()
+    public void Parse_ValidJson_ComputesAccuracy()
     {
-        var profile = StalcraftHqDataSource.Parse(ValidHtml);
+        var profile = StalcraftApiDataSource.ParseProfile(MakeJson(FullProfileJson));
         profile!.Accuracy.Should().Be("86%");
     }
 
     [Fact]
-    public void Parse_ValidHtml_ReturnsPlaytime()
+    public void Parse_ValidJson_FormatsPlaytime()
     {
-        var profile = StalcraftHqDataSource.Parse(ValidHtml);
-        profile!.Playtime.Should().Be("388 days, 5 hours and 45 minutes");
+        var profile = StalcraftApiDataSource.ParseProfile(MakeJson(FullProfileJson));
+        profile!.Playtime.Should().Be("388d 5h");
     }
 
     [Fact]
-    public void Parse_ValidHtml_ReturnsClanHistory()
+    public void Parse_ValidJson_ReturnsClanEntry()
     {
-        var profile = StalcraftHqDataSource.Parse(ValidHtml);
-        profile!.ClanHistory.Should().HaveCount(2);
-        profile.ClanHistory[0].ClanTag.Should().Be("HARD");
-        profile.ClanHistory[0].ClanName.Should().Be("Try Hard");
-        profile.ClanHistory[1].ClanTag.Should().Be("LOVE");
+        var profile = StalcraftApiDataSource.ParseProfile(MakeJson(FullProfileJson));
+        profile!.ClanHistory.Should().HaveCount(1);
+        profile.ClanHistory[0].ClanTag.Should().Be("LOVE");
+        profile.ClanHistory[0].ClanName.Should().Be("Awake");
     }
 
     [Fact]
-    public void Parse_HtmlWithZeroStats_ReturnsNull()
+    public void Parse_ZeroStats_ReturnsNull()
     {
-        StalcraftHqDataSource.Parse(EmptyHtml).Should().BeNull();
+        StalcraftApiDataSource.ParseProfile(MakeJson("""{ "stats": [], "clan": null }"""))
+            .Should().BeNull();
     }
 
     [Fact]
-    public void Parse_NumbersWithSpaces_ParsesCorrectly()
+    public void Parse_ZeroShots_ReturnsAccuracyDash()
     {
-        var html = """
-            <html><body>
-              <dl>
-                <div><dt>Kills:</dt><dd>1 000 000</dd></div>
-                <div><dt>Deaths:</dt><dd>500 000</dd></div>
-              </dl>
-            </body></html>
-            """;
-        var profile = StalcraftHqDataSource.Parse(html);
-        profile!.Kills.Should().Be(1000000);
-        profile.Deaths.Should().Be(500000);
+        var json = """{ "stats": [{ "id": "kil", "value": 100 }, { "id": "dea", "value": 10 }] }""";
+        var profile = StalcraftApiDataSource.ParseProfile(MakeJson(json));
+        profile!.Accuracy.Should().Be("—");
     }
 }

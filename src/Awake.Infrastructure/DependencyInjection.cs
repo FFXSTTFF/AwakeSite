@@ -42,9 +42,9 @@ public static class DependencyInjection
         services.AddSingleton<IItemCacheService, ItemCacheService>();
         services.AddHostedService<ItemSyncHostedService>();
 
-        // Player data sources (Playwright-based, singleton browser)
-        services.AddSingleton<StalcraftHqDataSource>();
-        services.AddSingleton<IPlayerDataSource>(sp => sp.GetRequiredService<StalcraftHqDataSource>());
+        // Player data (stalzone.wiki via Playwright — no auth required)
+        services.AddSingleton<StalzoneWikiDataSource>();
+        services.AddSingleton<IPlayerDataSource>(sp => sp.GetRequiredService<StalzoneWikiDataSource>());
         services.AddSingleton<IPlayerDataAggregator, PlayerDataAggregator>();
 
         // Identity services
