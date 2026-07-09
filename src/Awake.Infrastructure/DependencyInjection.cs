@@ -42,9 +42,21 @@ public static class DependencyInjection
         services.AddSingleton<IItemCacheService, ItemCacheService>();
         services.AddHostedService<ItemSyncHostedService>();
 
-        // Player data (stalzone.wiki via Playwright — no auth required)
+        // Player data — primary: stalzone.wiki (Playwright), fallback: stalcrafthq.com (FlareSolverr)
         services.AddSingleton<StalzoneWikiDataSource>();
         services.AddSingleton<IPlayerDataSource>(sp => sp.GetRequiredService<StalzoneWikiDataSource>());
+
+        var flareSolverrUrl = configuration["PlayerData:FlareSolverrUrl"];
+        if (!string.IsNullOrWhiteSpace(flareSolverrUrl))
+        {
+            services.AddHttpClient("flaresolverr", c => c.BaseAddress = new Uri(flareSolverrUrl));
+            // UseCookies=false so we can forward CF clearance cookies manually in the header
+            services.AddHttpClient("stalcrafthq-api")
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false });
+            services.AddTransient<StalcraftHqDataSource>();
+            services.AddTransient<IPlayerDataSource>(sp => sp.GetRequiredService<StalcraftHqDataSource>());
+        }
+
         services.AddSingleton<IPlayerDataAggregator, PlayerDataAggregator>();
 
         // Identity services

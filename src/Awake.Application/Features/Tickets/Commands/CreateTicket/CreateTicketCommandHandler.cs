@@ -13,7 +13,8 @@ public class CreateTicketCommandHandler(
     IUserRepository userRepository,
     ICurrentUserService currentUserService,
     IDiscordNotifier discordNotifier,
-    INotificationService notificationService
+    INotificationService notificationService,
+    IPlayerDataAggregator playerDataAggregator
 ) : IRequestHandler<CreateTicketCommand, Result<TicketListItemDto>>
 {
     public async Task<Result<TicketListItemDto>> Handle(
@@ -42,6 +43,9 @@ public class CreateTicketCommandHandler(
             cancellationToken);
 
         await discordNotifier.NotifyNewTicketAsync(ticket, cancellationToken);
+
+        // Pre-warm player data cache so officers see stats immediately (fire-and-forget)
+        _ = Task.Run(() => playerDataAggregator.GetPlayerDataAsync(request.GameNickname));
 
         var dto = new TicketListItemDto(
             ticket.Id, ticket.Type, ticket.Status, ticket.GameNickname,

@@ -16,9 +16,10 @@ public class CreateTicketCommandHandlerTests
     private readonly Mock<ICurrentUserService> _currentUser = new();
     private readonly Mock<IDiscordNotifier> _discord = new();
     private readonly Mock<INotificationService> _notifications = new();
+    private readonly Mock<IPlayerDataAggregator> _playerData = new();
 
     private CreateTicketCommandHandler BuildHandler() =>
-        new(_repo.Object, _userRepo.Object, _currentUser.Object, _discord.Object, _notifications.Object);
+        new(_repo.Object, _userRepo.Object, _currentUser.Object, _discord.Object, _notifications.Object, _playerData.Object);
 
     private void SetupUser(Guid userId, string username)
     {
