@@ -19,8 +19,19 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsUnique();
 
         builder.Property(x => x.PasswordHash)
-            .IsRequired()
             .HasMaxLength(255);
+
+        builder.Property(x => x.DiscordUserId)
+            .HasMaxLength(30);
+
+        builder.HasIndex(x => x.DiscordUserId)
+            .IsUnique();
+
+        builder.Property(x => x.DiscordUsername)
+            .HasMaxLength(100);
+
+        builder.Property(x => x.DiscordAvatarUrl)
+            .HasMaxLength(300);
 
         builder.Property(x => x.Email)
             .HasMaxLength(255);
