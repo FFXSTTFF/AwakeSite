@@ -30,6 +30,8 @@ services:
       Discord__BotToken: "${DISCORD_BOT_TOKEN}"
       Discord__ApplicationId: "${DISCORD_APP_ID}"
       Discord__PublicKey: "${DISCORD_PUBLIC_KEY}"
+      Discord__ClientSecret: "${DISCORD_CLIENT_SECRET}"
+      Discord__OAuthRedirectUri: "http://localhost:5001/api/auth/discord/callback"
       Cors__AllowedOrigin: "http://localhost:5173"
       PlayerData__FlareSolverrUrl: "http://flaresolverr:8191"
     depends_on:

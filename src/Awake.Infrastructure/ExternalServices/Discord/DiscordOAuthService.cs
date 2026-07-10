@@ -18,8 +18,15 @@ public class DiscordOAuthService(
     {
         var clientId = configuration["Discord:ApplicationId"];
         var redirectUri = configuration["Discord:OAuthRedirectUri"];
+
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(redirectUri))
+        {
+            logger.LogWarning("Discord:ApplicationId or Discord:OAuthRedirectUri is not configured.");
+            throw new InvalidOperationException("Discord:OAuthRedirectUri is not configured.");
+        }
+
         return $"https://discord.com/oauth2/authorize?client_id={clientId}" +
-               $"&response_type=code&redirect_uri={Uri.EscapeDataString(redirectUri!)}" +
+               $"&response_type=code&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
                $"&scope=identify&state={Uri.EscapeDataString(state)}";
     }
 
