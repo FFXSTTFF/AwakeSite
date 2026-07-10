@@ -113,6 +113,35 @@ export interface ItemSearchResult {
   color: string
 }
 
+export interface PlayerSquadDto {
+  id: string
+  name: string
+  number: number
+  isLeader: boolean
+}
+
+export interface PlayerStatsDto {
+  kills: number
+  deaths: number
+  kdRatio: number
+  accuracy: string
+  playtime: string
+  clanHistory: ClanEntry[]
+  fetchedAt: string
+}
+
+export interface PlayerProfileDto {
+  userId: string
+  username: string
+  discordUsername: string | null
+  discordAvatarUrl: string | null
+  rank: UserRank
+  gameNickname: string | null
+  squad: PlayerSquadDto | null
+  stats: PlayerStatsDto | null
+  loadout: Loadout | null
+}
+
 export interface TicketDetailDto extends TicketListItemDto {
   description: string
   reviewedAt: string | null

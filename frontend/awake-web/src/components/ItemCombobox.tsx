@@ -97,7 +97,7 @@ export function ItemCombobox({
               className="flex items-center gap-3 w-full px-3 py-2.5 text-left hover:bg-secondary transition-colors"
               onMouseDown={(e) => {
                 e.preventDefault()
-                onChange({ itemId: item.id, itemName: item.nameRu, itemIcon: item.icon })
+                onChange({ itemId: item.id, itemName: item.nameRu, itemIcon: item.icon, upgrade: 0 })
                 setQuery('')
                 setOpen(false)
               }}

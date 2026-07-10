@@ -12,6 +12,7 @@ import {
   FileText,
   Settings,
   Users,
+  UserCircle,
   LogOut,
   Menu,
   X,
@@ -41,6 +42,7 @@ export function Sidebar() {
 
   const navLinks = [
     { to: '/dashboard' as const, label: t('nav.dashboard'), icon: LayoutDashboard },
+    { to: '/profile' as const, label: 'Профиль', icon: UserCircle },
     { to: '/squads' as const, label: t('nav.squads'), icon: Shield },
     { to: '/tickets' as const, label: t('nav.tickets'), icon: FileText },
   ]
