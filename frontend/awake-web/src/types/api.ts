@@ -21,11 +21,6 @@ export interface LoginResponse {
   userId: string
 }
 
-export interface RegisterResponse {
-  userId: string
-  username: string
-}
-
 export interface SquadMemberDto {
   userId: string
   username: string
