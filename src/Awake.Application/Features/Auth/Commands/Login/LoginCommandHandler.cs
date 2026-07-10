@@ -16,7 +16,7 @@ public class LoginCommandHandler(
         CancellationToken cancellationToken)
     {
         var user = await userRepository.GetByUsernameAsync(request.Username, cancellationToken);
-        if (user is null)
+        if (user is null || user.PasswordHash is null)
             return Result<LoginResponse>.Failure("Неверный логин или пароль.");
 
         var isPasswordValid = passwordHasher.Verify(user.PasswordHash, request.Password);
