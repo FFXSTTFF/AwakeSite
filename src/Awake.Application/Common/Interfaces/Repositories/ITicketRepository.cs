@@ -13,4 +13,5 @@ public interface ITicketRepository
     Task AddCommentAsync(TicketComment comment, CancellationToken ct = default);
     Task<Ticket?> GetByDiscordChannelIdAsync(string channelId, CancellationToken ct = default);
     Task<Ticket?> GetOpenByDiscordUserIdAsync(string discordUserId, CancellationToken ct = default);
+    Task<IReadOnlyList<Ticket>> GetUnlinkedByDiscordUserIdAsync(string discordUserId, CancellationToken ct = default);
 }

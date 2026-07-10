@@ -59,4 +59,10 @@ public class TicketRepository(AppDbContext context) : ITicketRepository
                         t.Status != TicketStatus.Closed)
             .OrderByDescending(t => t.CreatedAt)
             .FirstOrDefaultAsync(ct);
+
+    public async Task<IReadOnlyList<Ticket>> GetUnlinkedByDiscordUserIdAsync(string discordUserId, CancellationToken ct = default)
+        => await context.Tickets
+            .Where(t => t.DiscordUserId == discordUserId && t.AuthorId == null)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync(ct);
 }
