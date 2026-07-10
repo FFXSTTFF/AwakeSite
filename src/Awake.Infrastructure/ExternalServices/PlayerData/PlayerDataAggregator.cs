@@ -4,6 +4,7 @@ using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Common.Models;
 using Awake.Domain.ValueObjects;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Awake.Infrastructure.ExternalServices.PlayerData;
 
@@ -40,9 +41,17 @@ public class PlayerDataAggregator : IPlayerDataAggregator
     public async Task<bool> ForceRefreshAsync(string gameNickname, CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;
-        var last = _lastForceRefresh.GetOrAdd(gameNickname, DateTime.MinValue);
-        if (now - last < ForceRefreshCooldown) return false;
-        _lastForceRefresh[gameNickname] = now;
+        var allowed = false;
+        // AddOrUpdate атомарен для ключа: решение "пройти/отклонить" и запись
+        // таймстампа происходят одной операцией — двойной клик не проскочит
+        _lastForceRefresh.AddOrUpdate(gameNickname,
+            _ => { allowed = true; return now; },
+            (_, last) =>
+            {
+                allowed = now - last >= ForceRefreshCooldown;
+                return allowed ? now : last;
+            });
+        if (!allowed) return false;
 
         await FetchAsync(gameNickname, ct);
         return true;
@@ -86,9 +95,32 @@ public class PlayerDataAggregator : IPlayerDataAggregator
     // чтобы профиль открывался мгновенно и данные переживали рестарты.
     private async Task SaveSnapshotAsync(string nickname, PlayerProfile profile, CancellationToken ct)
     {
-        await using var scope = _scopeFactory.CreateAsyncScope();
-        var repo = scope.ServiceProvider.GetRequiredService<IPlayerStatsSnapshotRepository>();
-        await repo.UpsertAsync(nickname, profile, ct);
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var repo = scope.ServiceProvider.GetRequiredService<IPlayerStatsSnapshotRepository>();
+            await repo.UpsertAsync(nickname, profile, ct);
+        }
+        catch (Exception ex)
+        {
+            // Ошибка персистенции не должна ронять успешный fetch
+            TrySaveFailedLog(nickname, ex);
+        }
+    }
+
+    private void TrySaveFailedLog(string nickname, Exception ex)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var logger = scope.ServiceProvider
+                .GetService<ILogger<PlayerDataAggregator>>();
+            logger?.LogWarning(ex, "Failed to persist stats snapshot for {Nickname}", nickname);
+        }
+        catch
+        {
+            // логгер недоступен (юнит-тесты) — молча игнорируем
+        }
     }
 
     private static bool IsComplete(PlayerProfile p) =>

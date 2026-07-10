@@ -13,6 +13,21 @@ public class PlayerStatsSnapshotRepository(AppDbContext context) : IPlayerStatsS
 
     public async Task UpsertAsync(string gameNickname, PlayerProfile profile, CancellationToken ct = default)
     {
+        try
+        {
+            await UpsertCoreAsync(gameNickname, profile, ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Гонка на unique-индексе: параллельная вставка того же ника победила.
+            // Сбрасываем трекер и повторяем один раз — теперь строка точно есть → update.
+            context.ChangeTracker.Clear();
+            await UpsertCoreAsync(gameNickname, profile, ct);
+        }
+    }
+
+    private async Task UpsertCoreAsync(string gameNickname, PlayerProfile profile, CancellationToken ct)
+    {
         var existing = await context.PlayerStatsSnapshots
             .FirstOrDefaultAsync(s => s.GameNickname == gameNickname, ct);
 

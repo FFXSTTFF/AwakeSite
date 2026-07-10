@@ -146,4 +146,18 @@ public class PlayerDataAggregatorTests
         second.Should().BeFalse();
         _source.Verify(s => s.TryGetDataAsync("Nick", It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task GetPlayerData_SnapshotSaveThrows_StillReturnsProfile()
+    {
+        _source.Setup(s => s.TryGetDataAsync("Nick", It.IsAny<CancellationToken>()))
+               .ReturnsAsync(Profile);
+        _snapshots.Setup(r => r.UpsertAsync(It.IsAny<string>(), It.IsAny<PlayerProfile>(),
+                It.IsAny<CancellationToken>()))
+               .ThrowsAsync(new InvalidOperationException("db down"));
+
+        var result = await BuildAggregatorWithMockedSnapshots().GetPlayerDataAsync("Nick");
+
+        result.Profile.Should().Be(Profile);
+    }
 }
