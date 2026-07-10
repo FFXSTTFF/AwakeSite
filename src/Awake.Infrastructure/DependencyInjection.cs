@@ -36,6 +36,7 @@ public static class DependencyInjection
         // Discord
         services.AddHttpClient<IDiscordNotifier, DiscordNotifier>();
         services.AddHttpClient<IDiscordBotService, DiscordBotService>();
+        services.AddHttpClient<IDiscordOAuthService, DiscordOAuthService>();
         services.AddHostedService<DiscordGatewayService>();
 
         // Items cache
