@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IDiscordGuildSettingsRepository, DiscordGuildSettingsRepository>();
+        services.AddScoped<IPlayerStatsSnapshotRepository, PlayerStatsSnapshotRepository>();
 
         // Discord
         services.AddHttpClient<IDiscordNotifier, DiscordNotifier>();

@@ -1,18 +1,26 @@
 using System.Collections.Concurrent;
 using Awake.Application.Common.Interfaces;
+using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Common.Models;
 using Awake.Domain.ValueObjects;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Awake.Infrastructure.ExternalServices.PlayerData;
 
 public class PlayerDataAggregator : IPlayerDataAggregator
 {
     private readonly IReadOnlyList<IPlayerDataSource> _sources;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ConcurrentDictionary<string, (PlayerProfile Profile, DateTime CachedAt)> _cache = new();
+    private readonly ConcurrentDictionary<string, DateTime> _lastForceRefresh = new();
     private static readonly TimeSpan Ttl = TimeSpan.FromHours(12);
+    private static readonly TimeSpan ForceRefreshCooldown = TimeSpan.FromMinutes(10);
 
-    public PlayerDataAggregator(IEnumerable<IPlayerDataSource> sources) =>
+    public PlayerDataAggregator(IEnumerable<IPlayerDataSource> sources, IServiceScopeFactory scopeFactory)
+    {
         _sources = sources.ToList();
+        _scopeFactory = scopeFactory;
+    }
 
     public async Task<PlayerDataResult> GetPlayerDataAsync(string nickname, CancellationToken ct = default)
     {
@@ -26,18 +34,22 @@ public class PlayerDataAggregator : IPlayerDataAggregator
         }
 
         var profile = await FetchAsync(nickname, ct);
-        if (profile is not null)
-            _cache[nickname] = (profile, DateTime.UtcNow);
-
         return new PlayerDataResult(nickname, profile);
     }
 
-    private async Task RefreshAsync(string nickname)
+    public async Task<bool> ForceRefreshAsync(string gameNickname, CancellationToken ct = default)
     {
-        var profile = await FetchAsync(nickname, CancellationToken.None);
-        if (profile is not null)
-            _cache[nickname] = (profile, DateTime.UtcNow);
+        var now = DateTime.UtcNow;
+        var last = _lastForceRefresh.GetOrAdd(gameNickname, DateTime.MinValue);
+        if (now - last < ForceRefreshCooldown) return false;
+        _lastForceRefresh[gameNickname] = now;
+
+        await FetchAsync(gameNickname, ct);
+        return true;
     }
+
+    private async Task RefreshAsync(string nickname)
+        => await FetchAsync(nickname, CancellationToken.None);
 
     private async Task<PlayerProfile?> FetchAsync(string nickname, CancellationToken ct)
     {
@@ -61,7 +73,22 @@ public class PlayerDataAggregator : IPlayerDataAggregator
             }
         }
 
+        if (profile is not null)
+        {
+            _cache[nickname] = (profile, DateTime.UtcNow);
+            await SaveSnapshotAsync(nickname, profile, ct);
+        }
+
         return profile;
+    }
+
+    // Write-through: каждый успешный fetch сохраняет снапшот в БД,
+    // чтобы профиль открывался мгновенно и данные переживали рестарты.
+    private async Task SaveSnapshotAsync(string nickname, PlayerProfile profile, CancellationToken ct)
+    {
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var repo = scope.ServiceProvider.GetRequiredService<IPlayerStatsSnapshotRepository>();
+        await repo.UpsertAsync(nickname, profile, ct);
     }
 
     private static bool IsComplete(PlayerProfile p) =>
