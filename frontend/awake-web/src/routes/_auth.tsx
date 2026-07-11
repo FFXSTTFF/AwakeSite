@@ -1,9 +1,12 @@
 import { createFileRoute, redirect, Outlet } from '@tanstack/react-router'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { useAuthStore } from '@/store/authStore'
 
 export const Route = createFileRoute('/_auth')({
-  beforeLoad: ({ context }) => {
-    if (!context.auth.isAuthenticated) {
+  // getState() вместо context: контекст роутера обновляется только с рендером
+  // RouterProvider, поэтому login() + мгновенный navigate() видел старое состояние
+  beforeLoad: () => {
+    if (!useAuthStore.getState().isAuthenticated) {
       throw redirect({ to: '/login' })
     }
   },

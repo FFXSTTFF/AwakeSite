@@ -13,8 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/manage/users')({
-  beforeLoad: ({ context }) => {
-    if ((context.auth.user?.rank ?? 0) < UserRank.Colonel) {
+  beforeLoad: () => {
+    if ((useAuthStore.getState().user?.rank ?? 0) < UserRank.Colonel) {
       throw redirect({ to: '/dashboard' })
     }
   },
