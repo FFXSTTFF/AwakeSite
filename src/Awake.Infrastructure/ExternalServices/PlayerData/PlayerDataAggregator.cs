@@ -99,7 +99,8 @@ public class PlayerDataAggregator : IPlayerDataAggregator
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
             var repo = scope.ServiceProvider.GetRequiredService<IPlayerStatsSnapshotRepository>();
-            await repo.UpsertAsync(nickname, profile, ct);
+            // CancellationToken.None: снапшот должен сохраниться, даже если исходный HTTP-запрос отменён
+            await repo.UpsertAsync(nickname, profile, CancellationToken.None);
         }
         catch (Exception ex)
         {

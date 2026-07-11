@@ -21,8 +21,21 @@ public class UserRepository(AppDbContext context) : IUserRepository
 
     public async Task AddAsync(User user, CancellationToken ct = default)
     {
-        await context.Users.AddAsync(user, ct);
-        await context.SaveChangesAsync(ct);
+        try
+        {
+            await context.Users.AddAsync(user, ct);
+            await context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Гонка на unique-индексе Username: конкурентный запрос успел вставить то же имя
+            // между проверкой ExistsByUsernameAsync и сохранением. Ретраим один раз с именем,
+            // гарантированно уникальным за счёт полного Discord id.
+            context.ChangeTracker.Clear();
+            user.Username = $"{user.Username}_{user.DiscordUserId}";
+            context.Users.Add(user);
+            await context.SaveChangesAsync(ct);
+        }
     }
 
     public async Task UpdateAsync(User user, CancellationToken ct = default)

@@ -182,16 +182,16 @@ Awake.Application/
 │       └── Result.cs                  ← Result<T> паттерн
 ├── Features/
 │   ├── Auth/
-│   │   ├── Register/
-│   │   │   ├── RegisterCommand.cs
-│   │   │   ├── RegisterCommandHandler.cs
-│   │   │   ├── RegisterCommandValidator.cs
-│   │   │   └── RegisterResponse.cs
-│   │   └── Login/
-│   │       ├── LoginCommand.cs
-│   │       ├── LoginCommandHandler.cs
-│   │       ├── LoginCommandValidator.cs
-│   │       └── LoginResponse.cs
+│   │   ├── DiscordLogin/
+│   │   │   ├── DiscordLoginCommand.cs
+│   │   │   └── DiscordLoginCommandHandler.cs
+│   │   ├── Login/
+│   │   │   └── LoginResponse.cs
+│   │   └── Refresh/
+│   │       ├── RefreshCommand.cs
+│   │       ├── RefreshCommandHandler.cs
+│   │       ├── RefreshCommandValidator.cs
+│   │       └── RefreshResponse.cs
 │   ├── Squads/
 │   │   ├── GetSquads/
 │   │   │   ├── GetSquadsQuery.cs

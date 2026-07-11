@@ -111,7 +111,7 @@ export function PlayerProfileView({ profile, onRefresh, refreshing }: Props) {
           <CardContent>
             <ul className="flex flex-col gap-1">
               {stats.clanHistory.map((c) => (
-                <li key={c.clanTag} className="text-sm text-foreground">
+                <li key={`${c.clanTag}-${c.since}`} className="text-sm text-foreground">
                   <span className="text-accent font-medium">[{c.clanTag}]</span> {c.clanName}
                 </li>
               ))}

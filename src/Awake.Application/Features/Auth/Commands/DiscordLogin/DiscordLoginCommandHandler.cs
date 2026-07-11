@@ -24,9 +24,22 @@ public class DiscordLoginCommandHandler(
 
         if (user is null)
         {
+            var baseUsername = info.GlobalName ?? info.Username;
+            var username = baseUsername;
+
+            // global_name у Discord не уникален — дизамбигуируем последними 4 символами id
+            if (await userRepository.ExistsByUsernameAsync(username, cancellationToken))
+            {
+                username = $"{baseUsername}_{info.Id[^4..]}";
+
+                // Крайне маловероятно, но и это может совпасть — берём id целиком (гарантированно уникален)
+                if (await userRepository.ExistsByUsernameAsync(username, cancellationToken))
+                    username = $"{baseUsername}_{info.Id}";
+            }
+
             user = new User
             {
-                Username = info.GlobalName ?? info.Username,
+                Username = username,
                 Rank = UserRank.Guest,
                 DiscordUserId = info.Id,
             };

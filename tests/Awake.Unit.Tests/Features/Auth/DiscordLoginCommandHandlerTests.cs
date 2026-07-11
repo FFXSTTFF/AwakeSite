@@ -47,6 +47,43 @@ public class DiscordLoginCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_NewUser_UsernameTaken_DisambiguatesWithIdSuffix()
+    {
+        _users.Setup(u => u.GetByDiscordUserIdAsync("111222333", It.IsAny<CancellationToken>()))
+              .ReturnsAsync((User?)null);
+        // "OopsITry" уже занят другим пользователем
+        _users.Setup(u => u.ExistsByUsernameAsync("OopsITry", It.IsAny<CancellationToken>()))
+              .ReturnsAsync(true);
+        User? saved = null;
+        _users.Setup(u => u.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+              .Callback<User, CancellationToken>((u, _) => saved = u)
+              .Returns(Task.CompletedTask);
+
+        var result = await BuildHandler().Handle(new DiscordLoginCommand(Info), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        saved!.Username.Should().Be("OopsITry_2333");   // последние 4 символа Discord id
+    }
+
+    [Fact]
+    public async Task Handle_NewUser_SuffixedUsernameAlsoTaken_FallsBackToFullId()
+    {
+        _users.Setup(u => u.GetByDiscordUserIdAsync("111222333", It.IsAny<CancellationToken>()))
+              .ReturnsAsync((User?)null);
+        _users.Setup(u => u.ExistsByUsernameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+              .ReturnsAsync(true);
+        User? saved = null;
+        _users.Setup(u => u.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+              .Callback<User, CancellationToken>((u, _) => saved = u)
+              .Returns(Task.CompletedTask);
+
+        var result = await BuildHandler().Handle(new DiscordLoginCommand(Info), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        saved!.Username.Should().Be("OopsITry_111222333");   // полный id глобально уникален
+    }
+
+    [Fact]
     public async Task Handle_ExistingUser_LogsInWithoutCreating()
     {
         var user = new User { Username = "OopsITry", DiscordUserId = "111222333", Rank = UserRank.Member };
