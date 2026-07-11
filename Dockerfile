@@ -26,8 +26,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxext6 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 \
     libasound2t64 && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /root/.cache/ms-playwright /root/.cache/ms-playwright
+# Не root: кэш браузера уезжает из /root в путь, доступный appuser
+# (Microsoft.Playwright читает PLAYWRIGHT_BROWSERS_PATH)
+RUN useradd --create-home --uid 1001 appuser
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+COPY --from=build --chown=appuser /root/.cache/ms-playwright /ms-playwright
 COPY --from=build /publish .
+
+USER appuser
 
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
