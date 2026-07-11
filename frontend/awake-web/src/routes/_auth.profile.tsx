@@ -21,14 +21,15 @@ function ProfilePage() {
     setRefreshing(true)
     try {
       await playersApi.refreshMyStats()
-      // Обновление идёт в фоне 15–30 c — перезапрашиваем профиль с задержкой
-      setTimeout(() => {
-        void queryClient.invalidateQueries({ queryKey: ['players', 'me'] })
-        setRefreshing(false)
-      }, 30_000)
     } catch {
-      setRefreshing(false)
+      // 429 (кулдаун) / 400 — кнопку всё равно держим заблокированной,
+      // иначе её можно кликать без остановки
     }
+    // Обновление идёт в фоне 15–30 c — перезапрашиваем профиль с задержкой
+    setTimeout(() => {
+      void queryClient.invalidateQueries({ queryKey: ['players', 'me'] })
+      setRefreshing(false)
+    }, 30_000)
   }
 
   if (isLoading) return <p className="text-muted-foreground">Загрузка…</p>
