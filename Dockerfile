@@ -33,6 +33,11 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 COPY --from=build --chown=appuser /root/.cache/ms-playwright /ms-playwright
 COPY --from=build /publish .
 
+# dotnet publish оставляет node-драйверу Playwright бит исполнения только
+# для владельца (root) — под appuser запуск падает с Permission denied
+RUN chmod -R a+rX /app/.playwright \
+    && chmod a+x /app/.playwright/node/linux-x64/node
+
 USER appuser
 
 EXPOSE 8080
