@@ -17,6 +17,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // 2. API
 builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddRateLimitingPolicies();
 builder.Services.AddCorsPolicies(builder.Configuration);
