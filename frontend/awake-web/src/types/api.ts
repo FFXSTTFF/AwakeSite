@@ -150,3 +150,10 @@ export interface TicketDetailDto extends TicketListItemDto {
   playerData: PlayerProfile | null
   loadout: Loadout | null
 }
+
+export interface LeaderboardEntryDto {
+  gameNickname: string
+  kills: number
+  accuracy: string
+  playtime: string
+}
