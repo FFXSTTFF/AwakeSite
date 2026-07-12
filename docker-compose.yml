@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: awake_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    environment:
+      LOG_LEVEL: info
+    ports:
+      - "8191:8191"
+
+  api:
+    build: .
+    ports:
+      - "5001:8080"
+    environment:
+      ConnectionStrings__Postgres: "Host=db;Port=5432;Database=awake_dev;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      Jwt__Secret: "${JWT_SECRET}"
+      Discord__BotToken: "${DISCORD_BOT_TOKEN}"
+      Discord__ApplicationId: "${DISCORD_APP_ID}"
+      Discord__PublicKey: "${DISCORD_PUBLIC_KEY}"
+      Discord__ClientSecret: "${DISCORD_CLIENT_SECRET}"
+      Discord__OAuthRedirectUri: "http://localhost:5001/api/auth/discord/callback"
+      Cors__AllowedOrigin: "http://localhost:5173"
+      PlayerData__FlareSolverrUrl: "http://flaresolverr:8191"
+    depends_on:
+      db:
+        condition: service_healthy
+      flaresolverr:
+        condition: service_started

@@ -53,4 +53,9 @@ public class SquadRepository(AppDbContext context) : ISquadRepository
 
     public async Task<bool> IsUserInAnySquadAsync(Guid userId, CancellationToken ct = default)
         => await context.SquadMembers.AnyAsync(m => m.UserId == userId, ct);
+
+    public async Task<SquadMember?> GetMembershipByUserIdAsync(Guid userId, CancellationToken ct = default)
+        => await context.SquadMembers
+            .Include(m => m.Squad)
+            .FirstOrDefaultAsync(m => m.UserId == userId, ct);
 }

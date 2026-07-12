@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Awake.Domain\Awake.Domain.csproj" />
     <ProjectReference Include="..\..\src\Awake.Application\Awake.Application.csproj" />
+    <ProjectReference Include="..\..\src\Awake.Infrastructure\Awake.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

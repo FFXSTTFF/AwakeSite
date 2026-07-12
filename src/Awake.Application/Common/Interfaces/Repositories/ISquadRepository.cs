@@ -13,4 +13,5 @@ public interface ISquadRepository
     Task UpdateMemberAsync(SquadMember member, CancellationToken ct = default);
     Task<Squad?> GetByIdWithMembersAsync(Guid id, CancellationToken ct = default);
     Task<bool> IsUserInAnySquadAsync(Guid userId, CancellationToken ct = default);
+    Task<SquadMember?> GetMembershipByUserIdAsync(Guid userId, CancellationToken ct = default);
 }

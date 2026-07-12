@@ -22,6 +22,112 @@ namespace Awake.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Awake.Domain.Entities.DiscordGuildSettings", b =>
+                {
+                    b.Property<string>("GuildId")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("AdminChannelId")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("AdminRoleId")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("TicketCategoryId")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("GuildId");
+
+                    b.ToTable("DiscordGuildSettings");
+                });
+
+            modelBuilder.Entity("Awake.Domain.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Awake.Domain.Entities.PlayerStatsSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Accuracy")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ClanHistory")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Deaths")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FetchedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GameNickname")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<double>("KdRatio")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("Kills")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Playtime")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameNickname")
+                        .IsUnique();
+
+                    b.ToTable("PlayerStatsSnapshots");
+                });
+
             modelBuilder.Entity("Awake.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -173,7 +279,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AuthorId")
+                    b.Property<Guid?>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -184,10 +290,24 @@ namespace Awake.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("DiscordChannelId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DiscordUserId")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("DiscordUsername")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("GameNickname")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Loadout")
+                        .HasColumnType("jsonb");
 
                     b.Property<DateTime?>("ReviewedAt")
                         .HasColumnType("timestamp with time zone");
@@ -219,7 +339,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AuthorId")
+                    b.Property<Guid?>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Content")
@@ -229,6 +349,10 @@ namespace Awake.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DiscordAuthorName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("TicketId")
                         .HasColumnType("uuid");
@@ -254,6 +378,18 @@ namespace Awake.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DiscordAvatarUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("DiscordUserId")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("DiscordUsername")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -263,7 +399,6 @@ namespace Awake.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -279,6 +414,9 @@ namespace Awake.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DiscordUserId")
+                        .IsUnique();
 
                     b.HasIndex("Username")
                         .IsUnique();
@@ -321,8 +459,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                     b.HasOne("Awake.Domain.Entities.User", "Author")
                         .WithMany("Tickets")
                         .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Awake.Domain.Entities.User", null)
                         .WithMany()
@@ -337,8 +474,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                     b.HasOne("Awake.Domain.Entities.User", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Awake.Domain.Entities.Ticket", "Ticket")
                         .WithMany("Comments")

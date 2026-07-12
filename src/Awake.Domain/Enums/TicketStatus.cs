@@ -5,5 +5,6 @@ public enum TicketStatus
     Pending,
     InReview,
     Approved,
-    Rejected
+    Rejected,
+    Closed
 }

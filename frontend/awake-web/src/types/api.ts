@@ -21,11 +21,6 @@ export interface LoginResponse {
   userId: string
 }
 
-export interface RegisterResponse {
-  userId: string
-  username: string
-}
-
 export interface SquadMemberDto {
   userId: string
   username: string
@@ -49,4 +44,109 @@ export interface UserDto {
   gameNickname: string | null
   rank: UserRank
   createdAt: string
+}
+
+export const TicketStatus = {
+  Pending: 0,
+  InReview: 1,
+  Approved: 2,
+  Rejected: 3,
+  Closed: 4,
+} as const
+export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
+
+export const TicketType = {
+  Recruitment: 0,
+  Appeal: 1,
+} as const
+export type TicketType = (typeof TicketType)[keyof typeof TicketType]
+
+export interface TicketCommentDto {
+  id: string
+  authorUsername: string
+  content: string
+  createdAt: string
+}
+
+export interface TicketListItemDto {
+  id: string
+  type: TicketType
+  status: TicketStatus
+  gameNickname: string
+  authorUsername: string
+  createdAt: string
+}
+
+export interface LoadoutSlot {
+  itemId: string
+  itemName: string
+  itemIcon: string
+  upgrade: number
+}
+
+export interface Loadout {
+  sniper: LoadoutSlot | null
+  weapon: LoadoutSlot
+  armor: LoadoutSlot
+}
+
+export interface ClanEntry {
+  clanName: string
+  clanTag: string
+  since: string
+}
+
+export interface PlayerProfile {
+  kills: number
+  deaths: number
+  kdRatio: number
+  accuracy: string
+  playtime: string
+  clanHistory: ClanEntry[]
+}
+
+export interface ItemSearchResult {
+  id: string
+  category: string
+  nameRu: string
+  icon: string
+  color: string
+}
+
+export interface PlayerSquadDto {
+  id: string
+  name: string
+  number: number
+  isLeader: boolean
+}
+
+export interface PlayerStatsDto {
+  kills: number
+  deaths: number
+  kdRatio: number
+  accuracy: string
+  playtime: string
+  clanHistory: ClanEntry[]
+  fetchedAt: string
+}
+
+export interface PlayerProfileDto {
+  userId: string
+  username: string
+  discordUsername: string | null
+  discordAvatarUrl: string | null
+  rank: UserRank
+  gameNickname: string | null
+  squad: PlayerSquadDto | null
+  stats: PlayerStatsDto | null
+  loadout: Loadout | null
+}
+
+export interface TicketDetailDto extends TicketListItemDto {
+  description: string
+  reviewedAt: string | null
+  reviewedByUsername: string | null
+  comments: TicketCommentDto[]
+  playerData: PlayerProfile | null
+  loadout: Loadout | null
 }

@@ -1,6 +1,7 @@
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Infrastructure.ExternalServices.Discord;
+using Awake.Infrastructure.ExternalServices.Items;
 using Awake.Infrastructure.ExternalServices.PlayerData;
 using Awake.Infrastructure.ExternalServices.PlayerData.Sources;
 using Awake.Infrastructure.Identity;
@@ -9,6 +10,7 @@ using Awake.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Awake.Infrastructure;
 
@@ -27,13 +29,37 @@ public static class DependencyInjection
         services.AddScoped<ISquadRepository, SquadRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IDiscordGuildSettingsRepository, DiscordGuildSettingsRepository>();
+        services.AddScoped<IPlayerStatsSnapshotRepository, PlayerStatsSnapshotRepository>();
 
         // Discord
         services.AddHttpClient<IDiscordNotifier, DiscordNotifier>();
+        services.AddHttpClient<IDiscordBotService, DiscordBotService>();
+        services.AddHttpClient<IDiscordOAuthService, DiscordOAuthService>();
+        services.AddHostedService<DiscordGatewayService>();
 
-        // Player data sources
-        services.AddScoped<IPlayerDataSource, StubDataSource>();
-        services.AddScoped<IPlayerDataAggregator, PlayerDataAggregator>();
+        // Items cache
+        services.AddHttpClient("stalzone");
+        services.AddSingleton<IItemCacheService, ItemCacheService>();
+        services.AddHostedService<ItemSyncHostedService>();
+
+        // Player data — primary: stalzone.wiki (Playwright), fallback: stalcrafthq.com (FlareSolverr)
+        services.AddSingleton<StalzoneWikiDataSource>();
+        services.AddSingleton<IPlayerDataSource>(sp => sp.GetRequiredService<StalzoneWikiDataSource>());
+
+        var flareSolverrUrl = configuration["PlayerData:FlareSolverrUrl"];
+        if (!string.IsNullOrWhiteSpace(flareSolverrUrl))
+        {
+            services.AddHttpClient("flaresolverr", c => c.BaseAddress = new Uri(flareSolverrUrl));
+            // UseCookies=false so we can forward CF clearance cookies manually in the header
+            services.AddHttpClient("stalcrafthq-api")
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false });
+            services.AddTransient<StalcraftHqDataSource>();
+            services.AddTransient<IPlayerDataSource>(sp => sp.GetRequiredService<StalcraftHqDataSource>());
+        }
+
+        services.AddSingleton<IPlayerDataAggregator, PlayerDataAggregator>();
 
         // Identity services
         services.AddScoped<IPasswordHasher, PasswordHasherService>();

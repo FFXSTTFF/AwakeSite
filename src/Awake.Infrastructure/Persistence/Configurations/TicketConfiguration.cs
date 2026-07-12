@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Awake.Domain.Entities;
+using Awake.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,7 +15,11 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.HasOne(x => x.Author)
             .WithMany(x => x.Tickets)
             .HasForeignKey(x => x.AuthorId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(x => x.DiscordUserId).HasMaxLength(30);
+        builder.Property(x => x.DiscordUsername).HasMaxLength(100);
 
         builder.HasOne<User>()
             .WithMany()
@@ -34,5 +40,12 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
 
         builder.Property(x => x.Type)
             .HasConversion<int>();
+
+        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        builder.Property(x => x.Loadout)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => v == null ? null : JsonSerializer.Serialize(v, jsonOptions),
+                v => v == null ? null : JsonSerializer.Deserialize<Loadout>(v, jsonOptions));
     }
 }
