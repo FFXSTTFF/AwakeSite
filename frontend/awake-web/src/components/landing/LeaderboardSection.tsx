@@ -19,7 +19,7 @@ export function LeaderboardSection() {
   })
 
   return (
-    <section id="leaderboard" className="relative py-24">
+    <section id="leaderboard" className="relative overflow-hidden py-24">
       {/* приглушённое свечение за заголовком секции */}
       <div
         aria-hidden
