@@ -2,7 +2,7 @@ import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { playersApi } from '@/api/players'
 import { ApiError } from '@/api/client'
-import { PlayerProfileView } from '@/components/PlayerProfileView'
+import { PlayerProfileSkeleton, PlayerProfileView } from '@/components/PlayerProfileView'
 import { useAuth } from '@/hooks/useAuth'
 import { UserRank } from '@/types/api'
 
@@ -28,7 +28,7 @@ function PlayerPage() {
     return <Navigate to="/profile" />
   }
 
-  if (isLoading) return <p className="text-muted-foreground">Загрузка…</p>
+  if (isLoading) return <PlayerProfileSkeleton />
   if (error instanceof ApiError && error.status === 403) return <Navigate to="/profile" />
   if (error || !profile) return <p className="text-destructive">Не удалось загрузить профиль.</p>
 

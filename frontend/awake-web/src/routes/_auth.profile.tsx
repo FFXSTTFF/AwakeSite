@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { playersApi } from '@/api/players'
-import { PlayerProfileView } from '@/components/PlayerProfileView'
+import { PlayerProfileSkeleton, PlayerProfileView } from '@/components/PlayerProfileView'
 
 export const Route = createFileRoute('/_auth/profile')({
   component: ProfilePage,
@@ -32,7 +32,7 @@ function ProfilePage() {
     }, 30_000)
   }
 
-  if (isLoading) return <p className="text-muted-foreground">Загрузка…</p>
+  if (isLoading) return <PlayerProfileSkeleton />
   if (error || !profile) return <p className="text-destructive">Не удалось загрузить профиль.</p>
 
   return (

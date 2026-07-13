@@ -1,6 +1,8 @@
+import { Clock, Crosshair, Percent, Skull, Target } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { PlayerProfileDto } from '@/types/api'
 
 const RANK_LABELS: Record<number, string> = {
@@ -39,7 +41,7 @@ export function PlayerProfileView({ profile, onRefresh, refreshing }: Props) {
           </div>
         )}
         <div>
-          <h1 className="text-xl font-bold text-foreground">{profile.username}</h1>
+          <h1 className="text-2xl font-black tracking-tight text-foreground">{profile.username}</h1>
           <p className="text-sm text-muted-foreground">
             {profile.gameNickname ?? 'игровой ник не привязан'}
             {profile.discordUsername && ` · @${profile.discordUsername}`}
@@ -73,11 +75,11 @@ export function PlayerProfileView({ profile, onRefresh, refreshing }: Props) {
         <CardContent>
           {stats ? (
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-              <StatTile label="Убийства" value={stats.kills.toLocaleString('ru-RU')} />
-              <StatTile label="Смерти" value={stats.deaths.toLocaleString('ru-RU')} />
-              <StatTile label="К/Д" value={stats.kdRatio.toFixed(2)} />
-              <StatTile label="Точность" value={stats.accuracy} />
-              <StatTile label="Время в игре" value={stats.playtime} />
+              <StatTile icon={Crosshair} label="Убийства" value={stats.kills.toLocaleString('ru-RU')} />
+              <StatTile icon={Skull} label="Смерти" value={stats.deaths.toLocaleString('ru-RU')} />
+              <StatTile icon={Target} label="К/Д" value={stats.kdRatio.toFixed(2)} />
+              <StatTile icon={Percent} label="Точность" value={stats.accuracy} />
+              <StatTile icon={Clock} label="Время в игре" value={stats.playtime} />
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
@@ -123,11 +125,18 @@ export function PlayerProfileView({ profile, onRefresh, refreshing }: Props) {
   )
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatTile({ icon: Icon, label, value }: {
+  icon: React.ComponentType<{ size?: number; className?: string }>
+  label: string
+  value: string
+}) {
   return (
-    <div className="rounded-lg border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-lg font-bold text-foreground">{value}</p>
+    <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-accent/30">
+      <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
+        <Icon size={15} className="text-accent" />
+      </div>
+      <p className="text-xl font-black tracking-tight text-foreground">{value}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{label}</p>
     </div>
   )
 }
@@ -140,6 +149,23 @@ function LoadoutTile({ label, slot }: { label: string; slot: { itemName: string;
         {slot.itemName}
         {slot.upgrade > 0 && <span className="text-accent"> +{slot.upgrade}</span>}
       </p>
+    </div>
+  )
+}
+
+export function PlayerProfileSkeleton() {
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-16 w-16 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-56" />
+          <Skeleton className="h-5 w-32" />
+        </div>
+      </div>
+      <Skeleton className="h-52 w-full rounded-xl" />
+      <Skeleton className="h-32 w-full rounded-xl" />
     </div>
   )
 }
