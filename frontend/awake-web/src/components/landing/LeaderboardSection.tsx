@@ -19,11 +19,12 @@ export function LeaderboardSection() {
   })
 
   return (
-    <section id="leaderboard" className="relative overflow-hidden py-24">
-      {/* приглушённое свечение за заголовком секции */}
+    <section id="leaderboard" className="relative py-24">
+      {/* свечение без overflow-hidden: перетекает в соседние секции, шва нет
+          (горизонтальный клип — на обёртке страницы) */}
       <div
         aria-hidden
-        className="absolute left-1/2 top-0 h-64 w-[600px] -translate-x-1/2 rounded-full bg-accent/10 blur-[100px]"
+        className="absolute left-1/2 top-0 h-96 w-[600px] -translate-x-1/2 rounded-full bg-accent/[0.07] blur-[130px]"
       />
       <div className="relative mx-auto max-w-4xl px-4">
         <Reveal>

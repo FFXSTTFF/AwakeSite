@@ -9,13 +9,15 @@ export function HeroSection() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   return (
-    <section className="relative overflow-hidden pb-24 pt-32">
+    // min-h-screen: hero занимает весь первый экран, следующая секция не выглядывает;
+    // без overflow-hidden — свечение плавно уходит вниз, в секцию топа (клип на уровне страницы)
+    <section className="relative flex min-h-screen items-center pb-24 pt-24">
       {/* приглушённое зелёное свечение за заголовком */}
       <div
         aria-hidden
         className="absolute -top-40 left-1/4 h-[600px] w-[600px] rounded-full bg-accent/10 blur-[120px]"
       />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 md:grid-cols-2">
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 md:grid-cols-2">
         <Reveal>
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">

@@ -13,7 +13,9 @@ export const Route = createFileRoute('/')({
 // авторизованные видят кнопки «В дашборд» вместо «Войти»
 function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    // overflow-x-clip: свечения секций свободно перетекают по вертикали
+    // (единый фон без швов), но не создают горизонтальный скролл на мобиле
+    <div className="min-h-screen overflow-x-clip bg-background">
       <LandingNav />
       <main>
         <HeroSection />
