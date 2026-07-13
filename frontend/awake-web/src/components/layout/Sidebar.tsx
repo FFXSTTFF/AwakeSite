@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { NotificationBell } from '@/components/layout/NotificationBell'
+import { BrandMark } from '@/components/BrandMark'
 
 const RANK_CLASSES: Record<number, string> = {
   [UserRank.Guest]: 'bg-secondary text-muted-foreground border-border',
@@ -62,10 +63,10 @@ export function Sidebar() {
       to={to as '/dashboard'}
       onClick={() => setOpen(false)}
       className={cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors',
+        'relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200',
         isActive(to)
-          ? 'bg-accent/10 text-accent'
-          : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
+          ? 'bg-accent/10 text-accent before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent'
+          : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
       )}
     >
       <Icon size={16} className={isActive(to) ? 'text-accent' : 'text-muted-foreground'} />
@@ -78,13 +79,8 @@ export function Sidebar() {
     <div className="flex flex-col h-full">
       {/* Brand */}
       <div className="px-4 py-5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-2 h-2 rounded-full bg-accent shadow-[0_0_8px_hsl(var(--accent))]" />
-          <span className="font-bold text-foreground">
-            Awake <span className="text-accent">[LOVE]</span>
-          </span>
-        </div>
-        <p className="text-xs text-muted-foreground mt-1 pl-[18px]">STALCRAFT</p>
+        <BrandMark />
+        <p className="mt-1 pl-[18px] text-xs text-muted-foreground">STALCRAFT</p>
       </div>
 
       <Separator />
@@ -111,10 +107,10 @@ export function Sidebar() {
           to="/settings"
           onClick={() => setOpen(false)}
           className={cn(
-            'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+            'relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200',
             isActive('/settings')
-              ? 'bg-accent/10 text-accent'
-              : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
+              ? 'bg-accent/10 text-accent before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent'
+              : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
           )}
         >
           <Settings size={16} />
