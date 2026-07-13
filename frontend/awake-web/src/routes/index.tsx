@@ -1,11 +1,26 @@
-import { createFileRoute, Navigate } from '@tanstack/react-router'
-import { useAuthStore } from '@/store/authStore'
+import { createFileRoute } from '@tanstack/react-router'
+import { LandingNav } from '@/components/landing/LandingNav'
+import { HeroSection } from '@/components/landing/HeroSection'
+import { LeaderboardSection } from '@/components/landing/LeaderboardSection'
+import { JoinSection } from '@/components/landing/JoinSection'
+import { LandingFooter } from '@/components/landing/LandingFooter'
 
 export const Route = createFileRoute('/')({
-  component: IndexPage,
+  component: LandingPage,
 })
 
-function IndexPage() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />
+// Публичная витрина клана: редиректа на /login больше нет,
+// авторизованные видят кнопки «В дашборд» вместо «Войти»
+function LandingPage() {
+  return (
+    <div className="min-h-screen bg-background">
+      <LandingNav />
+      <main>
+        <HeroSection />
+        <LeaderboardSection />
+        <JoinSection />
+      </main>
+      <LandingFooter />
+    </div>
+  )
 }
