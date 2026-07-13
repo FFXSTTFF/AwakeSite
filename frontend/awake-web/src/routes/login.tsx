@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { BrandMark } from '@/components/BrandMark'
+import { discordLoginUrl } from '@/lib/discord'
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -8,8 +10,6 @@ export const Route = createFileRoute('/login')({
     error: typeof search.error === 'string' ? search.error : undefined,
   }),
 })
-
-const API_URL = import.meta.env.VITE_API_URL ?? ''
 
 function LoginPage() {
   const { error } = Route.useSearch()
@@ -24,12 +24,7 @@ function LoginPage() {
       <div className="relative w-full max-w-sm">
         {/* Brand */}
         <div className="mb-8 text-center">
-          <div className="mb-2 inline-flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-accent shadow-[0_0_8px_hsl(var(--accent))]" />
-            <span className="text-2xl font-black tracking-tight text-foreground">
-              Awake <span className="text-accent">[LOVE]</span>
-            </span>
-          </div>
+          <BrandMark size="lg" className="mb-2 justify-center" />
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             STALCRAFT · Clan Platform
           </p>
@@ -49,7 +44,7 @@ function LoginPage() {
               </p>
             )}
             <Button asChild className="w-full">
-              <a href={`${API_URL}/api/auth/discord/login`}>Войти через Discord</a>
+              <a href={discordLoginUrl}>Войти через Discord</a>
             </Button>
           </CardContent>
         </Card>

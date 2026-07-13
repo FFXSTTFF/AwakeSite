@@ -12,7 +12,7 @@ const MEDAL_CLASSES: Record<number, string> = {
 }
 
 export function LeaderboardSection() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['public', 'leaderboard'],
     queryFn: publicApi.getLeaderboard,
     staleTime: 5 * 60_000,
@@ -43,6 +43,10 @@ export function LeaderboardSection() {
                 <Skeleton key={i} className="h-14 w-full rounded-xl" />
               ))}
             </div>
+          ) : isError ? (
+            <p className="text-center text-muted-foreground">
+              Не удалось загрузить статистику — обнови страницу.
+            </p>
           ) : !data || data.length === 0 ? (
             <p className="text-center text-muted-foreground">
               Статистика появится совсем скоро.

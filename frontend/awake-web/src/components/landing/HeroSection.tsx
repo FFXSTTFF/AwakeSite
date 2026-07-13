@@ -1,9 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Reveal } from '@/components/Reveal'
+import { discordLoginUrl } from '@/lib/discord'
 import { useAuthStore } from '@/store/authStore'
-
-const API_URL = import.meta.env.VITE_API_URL ?? ''
 
 export function HeroSection() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -40,7 +39,7 @@ export function HeroSection() {
                 </Button>
               ) : (
                 <Button asChild size="lg">
-                  <a href={`${API_URL}/api/auth/discord/login`}>Войти через Discord</a>
+                  <a href={discordLoginUrl}>Войти через Discord</a>
                 </Button>
               )}
               <Button asChild variant="outline" size="lg">
