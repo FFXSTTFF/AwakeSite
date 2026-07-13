@@ -14,7 +14,7 @@ function SettingsPage() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Настройки</h1>
+      <h1 className="mb-6 text-2xl font-black tracking-tight text-foreground">Настройки</h1>
 
       <Card>
         <CardHeader className="pb-3">
