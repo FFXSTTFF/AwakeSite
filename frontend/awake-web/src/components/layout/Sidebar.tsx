@@ -14,11 +14,8 @@ import {
   Users,
   UserCircle,
   LogOut,
-  Menu,
-  X,
   ChevronRight,
 } from 'lucide-react'
-import { useState } from 'react'
 import { NotificationBell } from '@/components/layout/NotificationBell'
 import { BrandMark } from '@/components/BrandMark'
 
@@ -35,7 +32,6 @@ export function Sidebar() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const [open, setOpen] = useState(false)
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
 
@@ -51,7 +47,6 @@ export function Sidebar() {
   function handleLogout() {
     logout()
     void navigate({ to: '/login' })
-    setOpen(false)
   }
 
   function isActive(path: string) {
@@ -61,7 +56,6 @@ export function Sidebar() {
   const NavLink = ({ to, label, icon: Icon }: { to: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }) => (
     <Link
       to={to as '/dashboard'}
-      onClick={() => setOpen(false)}
       className={cn(
         'relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200',
         isActive(to)
@@ -105,7 +99,6 @@ export function Sidebar() {
       <div className="p-2 space-y-1">
         <Link
           to="/settings"
-          onClick={() => setOpen(false)}
           className={cn(
             'relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200',
             isActive('/settings')
@@ -142,32 +135,8 @@ export function Sidebar() {
   )
 
   return (
-    <>
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-60 shrink-0 bg-card border-r border-border min-h-screen sticky top-0 h-screen">
-        <SidebarContent />
-      </aside>
-
-      {/* Mobile hamburger */}
-      <Button
-        variant="outline"
-        size="icon"
-        className="md:hidden fixed top-4 left-4 z-50 h-8 w-8"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Toggle menu"
-      >
-        {open ? <X size={16} /> : <Menu size={16} />}
-      </Button>
-
-      {/* Mobile overlay */}
-      {open && (
-        <div className="md:hidden fixed inset-0 z-40 flex">
-          <div className="w-60 bg-card border-r border-border flex flex-col h-full">
-            <SidebarContent />
-          </div>
-          <div className="flex-1 bg-black/50" onClick={() => setOpen(false)} />
-        </div>
-      )}
-    </>
+    <aside className="sticky top-0 hidden h-screen min-h-screen w-60 shrink-0 flex-col border-r border-border bg-card md:flex">
+      <SidebarContent />
+    </aside>
   )
 }
