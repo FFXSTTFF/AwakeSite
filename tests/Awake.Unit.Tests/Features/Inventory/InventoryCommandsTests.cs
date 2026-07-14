@@ -65,16 +65,25 @@ public class InventoryCommandsTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Theory]
-    [InlineData("image/gif")]
-    [InlineData("application/pdf")]
-    [InlineData("text/html")]
-    public async Task UploadProof_BadContentType_Fails(string contentType)
+    [Fact]
+    public async Task UploadProof_BytesNotImage_Fails()
     {
         var handler = new UploadBuildProofCommandHandler(_proofs.Object);
 
         var result = await handler.Handle(new UploadBuildProofCommand(
-            _userId, BuildType.Speed, [1, 2, 3], contentType), CancellationToken.None);
+            _userId, BuildType.Speed, [1, 2, 3], "image/png"), CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task UploadProof_HtmlDisguisedAsPng_Fails()
+    {
+        var handler = new UploadBuildProofCommandHandler(_proofs.Object);
+        var htmlBytes = "<htm"u8.ToArray();
+
+        var result = await handler.Handle(new UploadBuildProofCommand(
+            _userId, BuildType.Speed, htmlBytes, "image/png"), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
     }
@@ -98,8 +107,9 @@ public class InventoryCommandsTests
                .ReturnsAsync((PlayerBuildProof?)null);
         var handler = new UploadBuildProofCommandHandler(_proofs.Object);
 
+        var pngBytes = new byte[] { 0x89, 0x50, 0x4E, 0x47, 1, 2 };
         var result = await handler.Handle(new UploadBuildProofCommand(
-            _userId, BuildType.Speed, [1, 2, 3], "image/png"), CancellationToken.None);
+            _userId, BuildType.Speed, pngBytes, "image/png"), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         _proofs.Verify(r => r.AddAsync(
@@ -119,11 +129,16 @@ public class InventoryCommandsTests
                .ReturnsAsync(existing);
         var handler = new UploadBuildProofCommandHandler(_proofs.Object);
 
+        var webpBytes = new byte[]
+        {
+            (byte)'R', (byte)'I', (byte)'F', (byte)'F', 0, 0, 0, 0,
+            (byte)'W', (byte)'E', (byte)'B', (byte)'P',
+        };
         var result = await handler.Handle(new UploadBuildProofCommand(
-            _userId, BuildType.Vitality, [1, 2], "image/webp"), CancellationToken.None);
+            _userId, BuildType.Vitality, webpBytes, "image/webp"), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        existing.Image.Should().Equal(1, 2);
+        existing.Image.Should().Equal(webpBytes);
         existing.ContentType.Should().Be("image/webp");
         _proofs.Verify(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>()), Times.Once);
         _proofs.Verify(r => r.AddAsync(It.IsAny<PlayerBuildProof>(), It.IsAny<CancellationToken>()), Times.Never);

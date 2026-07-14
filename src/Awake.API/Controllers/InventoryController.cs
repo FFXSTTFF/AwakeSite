@@ -74,7 +74,7 @@ public class InventoryController(
             new DeleteBuildProofCommand(currentUser.UserId, type), ct);
         return result.IsSuccess
             ? Ok()
-            : Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
+            : Problem(detail: result.Error, statusCode: StatusCodes.Status404NotFound);
     }
 
     // ── Чужой инвентарь ─────────────────────────────────────────────────────
@@ -94,9 +94,11 @@ public class InventoryController(
             return Forbid();
 
         var proof = await proofRepository.GetAsync(userId, type, ct);
-        return proof is null
-            ? NotFound()
-            : File(proof.Image, proof.ContentType);
+        if (proof is null)
+            return NotFound();
+
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        return File(proof.Image, proof.ContentType);
     }
 
     [HttpDelete("api/players/{userId:guid}/build-proof/{type}")]
