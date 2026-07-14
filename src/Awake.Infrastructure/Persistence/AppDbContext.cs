@@ -37,6 +37,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        builder.Entity<SquadMember>(e =>
+        {
+            e.HasIndex(x => x.UserId).IsUnique();
+        });
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken ct = default)

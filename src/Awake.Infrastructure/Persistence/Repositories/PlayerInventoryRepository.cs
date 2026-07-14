@@ -14,6 +14,13 @@ public class PlayerInventoryRepository(AppDbContext context) : IPlayerInventoryR
             .OrderBy(x => x.CreatedAt)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<PlayerInventoryItem>> GetByUserIdsAsync(
+        IReadOnlyCollection<Guid> userIds, CancellationToken ct = default) =>
+        await context.PlayerInventoryItems
+            .AsNoTracking()
+            .Where(x => userIds.Contains(x.UserId))
+            .ToListAsync(ct);
+
     public Task<PlayerInventoryItem?> GetAsync(Guid userId, string itemId, CancellationToken ct = default) =>
         context.PlayerInventoryItems
             .FirstOrDefaultAsync(x => x.UserId == userId && x.ItemId == itemId, ct);

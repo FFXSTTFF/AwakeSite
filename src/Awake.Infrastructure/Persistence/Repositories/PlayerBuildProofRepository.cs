@@ -24,6 +24,22 @@ public class PlayerBuildProofRepository(AppDbContext context) : IPlayerBuildProo
             })
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<PlayerBuildProof>> GetByUserIdsAsync(
+        IReadOnlyCollection<Guid> userIds, CancellationToken ct = default) =>
+        await context.PlayerBuildProofs
+            .AsNoTracking()
+            .Where(x => userIds.Contains(x.UserId))
+            .Select(x => new PlayerBuildProof
+            {
+                Id = x.Id,
+                UserId = x.UserId,
+                BuildType = x.BuildType,
+                ContentType = x.ContentType,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
+            })
+            .ToListAsync(ct);
+
     public Task<PlayerBuildProof?> GetAsync(Guid userId, BuildType type, CancellationToken ct = default) =>
         context.PlayerBuildProofs
             .FirstOrDefaultAsync(x => x.UserId == userId && x.BuildType == type, ct);
