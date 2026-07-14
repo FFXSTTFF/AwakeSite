@@ -1,6 +1,7 @@
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Common.Models;
+using Awake.Domain.Entities;
 using Awake.Domain.Enums;
 using MediatR;
 
@@ -27,6 +28,31 @@ public class UpdateTicketStatusCommandHandler(
         ticket.ReviewedAt = DateTime.UtcNow;
 
         await ticketRepository.UpdateAsync(ticket, cancellationToken);
+
+        // Одобренная заявка на вступление автоматически повышает Гостя до Участника
+        // (раньше офицер делал это вручную через управление пользователями и мог забыть)
+        if (request.NewStatus == TicketStatus.Approved && ticket.Type == TicketType.Recruitment)
+        {
+            User? applicant = null;
+            if (ticket.AuthorId.HasValue)
+                applicant = await userRepository.GetByIdAsync(ticket.AuthorId.Value, cancellationToken);
+            else if (!string.IsNullOrEmpty(ticket.DiscordUserId))
+                applicant = await userRepository.GetByDiscordUserIdAsync(ticket.DiscordUserId, cancellationToken);
+
+            if (applicant is not null && applicant.Rank == UserRank.Guest)
+            {
+                applicant.Rank = UserRank.Member;
+                if (string.IsNullOrEmpty(applicant.GameNickname))
+                    applicant.GameNickname = ticket.GameNickname;
+                await userRepository.UpdateAsync(applicant, cancellationToken);
+
+                await notificationService.CreateAsync(
+                    applicant.Id,
+                    "Добро пожаловать в клан",
+                    "Тебе выдан ранг «Участник» — статистика, отряды и тикеты теперь доступны.",
+                    cancellationToken);
+            }
+        }
 
         if (request.NewStatus is TicketStatus.Approved or TicketStatus.Rejected)
         {

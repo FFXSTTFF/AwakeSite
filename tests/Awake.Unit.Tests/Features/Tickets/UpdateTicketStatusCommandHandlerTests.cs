@@ -81,6 +81,100 @@ public class UpdateTicketStatusCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ApproveRecruitment_PromotesGuestAuthorToMember()
+    {
+        var author = new User { Id = Guid.NewGuid(), Rank = UserRank.Guest, GameNickname = null };
+        var ticket = new Ticket
+        {
+            Id = Guid.NewGuid(), Status = TicketStatus.InReview, Type = TicketType.Recruitment,
+            AuthorId = author.Id, GameNickname = "Eve",
+        };
+
+        _repo.Setup(r => r.GetByIdAsync(ticket.Id, It.IsAny<CancellationToken>())).ReturnsAsync(ticket);
+        _repo.Setup(r => r.UpdateAsync(It.IsAny<Ticket>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _userRepo.Setup(r => r.GetByIdAsync(author.Id, It.IsAny<CancellationToken>())).ReturnsAsync(author);
+        _currentUser.Setup(s => s.UserId).Returns(Guid.NewGuid());
+        _currentUser.Setup(s => s.IsAuthenticated).Returns(true);
+
+        var result = await BuildHandler().Handle(
+            new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Approved), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        author.Rank.Should().Be(UserRank.Member);
+        author.GameNickname.Should().Be("Eve");
+        _userRepo.Verify(r => r.UpdateAsync(author, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ApproveRecruitment_FindsApplicantByDiscordId()
+    {
+        var applicant = new User { Id = Guid.NewGuid(), Rank = UserRank.Guest };
+        var ticket = new Ticket
+        {
+            Id = Guid.NewGuid(), Status = TicketStatus.InReview, Type = TicketType.Recruitment,
+            AuthorId = null, DiscordUserId = "discord-123", GameNickname = "Frank",
+        };
+
+        _repo.Setup(r => r.GetByIdAsync(ticket.Id, It.IsAny<CancellationToken>())).ReturnsAsync(ticket);
+        _repo.Setup(r => r.UpdateAsync(It.IsAny<Ticket>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _userRepo.Setup(r => r.GetByDiscordUserIdAsync("discord-123", It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(applicant);
+        _currentUser.Setup(s => s.UserId).Returns(Guid.NewGuid());
+        _currentUser.Setup(s => s.IsAuthenticated).Returns(true);
+
+        await BuildHandler().Handle(
+            new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Approved), CancellationToken.None);
+
+        applicant.Rank.Should().Be(UserRank.Member);
+        _userRepo.Verify(r => r.UpdateAsync(applicant, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ApproveRecruitment_DoesNotTouchNonGuest()
+    {
+        var officer = new User { Id = Guid.NewGuid(), Rank = UserRank.Officer, GameNickname = "Old" };
+        var ticket = new Ticket
+        {
+            Id = Guid.NewGuid(), Status = TicketStatus.InReview, Type = TicketType.Recruitment,
+            AuthorId = officer.Id, GameNickname = "New",
+        };
+
+        _repo.Setup(r => r.GetByIdAsync(ticket.Id, It.IsAny<CancellationToken>())).ReturnsAsync(ticket);
+        _repo.Setup(r => r.UpdateAsync(It.IsAny<Ticket>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _userRepo.Setup(r => r.GetByIdAsync(officer.Id, It.IsAny<CancellationToken>())).ReturnsAsync(officer);
+        _currentUser.Setup(s => s.UserId).Returns(Guid.NewGuid());
+        _currentUser.Setup(s => s.IsAuthenticated).Returns(true);
+
+        await BuildHandler().Handle(
+            new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Approved), CancellationToken.None);
+
+        officer.Rank.Should().Be(UserRank.Officer);
+        officer.GameNickname.Should().Be("Old");
+        _userRepo.Verify(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ApproveAppeal_DoesNotPromote()
+    {
+        var ticket = new Ticket
+        {
+            Id = Guid.NewGuid(), Status = TicketStatus.InReview, Type = TicketType.Appeal,
+            AuthorId = Guid.NewGuid(), GameNickname = "Grace",
+        };
+
+        _repo.Setup(r => r.GetByIdAsync(ticket.Id, It.IsAny<CancellationToken>())).ReturnsAsync(ticket);
+        _repo.Setup(r => r.UpdateAsync(It.IsAny<Ticket>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _currentUser.Setup(s => s.UserId).Returns(Guid.NewGuid());
+        _currentUser.Setup(s => s.IsAuthenticated).Returns(true);
+
+        await BuildHandler().Handle(
+            new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Approved), CancellationToken.None);
+
+        _userRepo.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _userRepo.Verify(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Handle_DiscordBot_ReviewedByNull_WhenNotAuthenticated()
     {
         var ticket = new Ticket { Id = Guid.NewGuid(), Status = TicketStatus.Pending, GameNickname = "Dave" };
