@@ -159,6 +159,7 @@ function ProofSlot({
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!preview) return
@@ -167,8 +168,13 @@ function ProofSlot({
 
   async function showProof() {
     if (!userId) return
-    const blob = await inventoryApi.proofImageBlob(userId, type)
-    setPreview(URL.createObjectURL(blob))
+    setPreviewError(null)
+    try {
+      const blob = await inventoryApi.proofImageBlob(userId, type)
+      setPreview(URL.createObjectURL(blob))
+    } catch {
+      setPreviewError('Не удалось загрузить скрин')
+    }
   }
 
   return (
@@ -219,6 +225,7 @@ function ProofSlot({
           </>
         )}
       </div>
+      {previewError && <p className="mt-2 text-xs text-destructive">{previewError}</p>}
       {preview && (
         <button
           type="button"

@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client'
 import { inventoryApi } from '@/api/inventory'
 import { PlayerProfileSkeleton, PlayerProfileView } from '@/components/PlayerProfileView'
 import { InventoryFlags } from '@/components/InventoryFlags'
+import { ProofModeration } from '@/components/ProofModeration'
 import { useAuth } from '@/hooks/useAuth'
 import { UserRank } from '@/types/api'
 
@@ -43,7 +44,14 @@ function PlayerPage() {
   return (
     <PlayerProfileView
       profile={profile}
-      flagsSlot={inventory ? <InventoryFlags flags={inventory.flags} size="sm" /> : null}
+      flagsSlot={
+        inventory ? (
+          <div className="flex flex-col items-end gap-2">
+            <InventoryFlags flags={inventory.flags} size="sm" />
+            {rank >= UserRank.Officer && <ProofModeration userId={userId} flags={inventory.flags} />}
+          </div>
+        ) : null
+      }
     />
   )
 }
