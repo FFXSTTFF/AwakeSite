@@ -11,6 +11,12 @@ public class PlayerStatsSnapshotRepository(AppDbContext context) : IPlayerStatsS
         => await context.PlayerStatsSnapshots
             .FirstOrDefaultAsync(s => s.GameNickname == gameNickname, ct);
 
+    public async Task<IReadOnlyList<PlayerStatsSnapshot>> GetByNicknamesAsync(
+        IReadOnlyCollection<string> gameNicknames, CancellationToken ct = default)
+        => await context.PlayerStatsSnapshots
+            .Where(s => gameNicknames.Contains(s.GameNickname))
+            .ToListAsync(ct);
+
     public async Task UpsertAsync(string gameNickname, PlayerProfile profile, CancellationToken ct = default)
     {
         try

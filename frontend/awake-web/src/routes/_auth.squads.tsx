@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next'
 import { squadsApi } from '@/api/squads'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { Crown } from 'lucide-react'
+import { Crown, Shield } from 'lucide-react'
 
 export const Route = createFileRoute('/_auth/squads')({
   component: SquadsPage,
@@ -19,12 +20,21 @@ function SquadsPage() {
   })
 
   if (isLoading) {
-    return <div className="text-muted-foreground">{t('common.loading')}</div>
+    return (
+      <div>
+        <h1 className="mb-6 text-2xl font-black tracking-tight text-foreground">{t('squads.title')}</h1>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-6">{t('squads.title')}</h1>
+      <h1 className="text-2xl font-black tracking-tight text-foreground mb-6">{t('squads.title')}</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {squads?.map((squad) => {
           const leader = squad.members.find((m) => m.isLeader)
@@ -102,6 +112,14 @@ function SquadsPage() {
           )
         })}
       </div>
+      {!squads?.length && (
+        <div className="rounded-xl border border-border bg-card py-16 text-center">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-accent/10">
+            <Shield size={20} className="text-accent" />
+          </div>
+          <p className="text-sm text-muted-foreground">Отрядов пока нет.</p>
+        </div>
+      )}
     </div>
   )
 }

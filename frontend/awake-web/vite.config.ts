@@ -15,6 +15,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // скриншот-проверки вёрстки гоняются Chromium'ом из docker-контейнера api
+    allowedHosts: ['host.docker.internal'],
     proxy: { '/api': { target: 'http://localhost:5001', changeOrigin: true } },
   },
 })

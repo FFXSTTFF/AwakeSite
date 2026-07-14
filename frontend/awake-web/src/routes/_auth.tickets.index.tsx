@@ -5,6 +5,7 @@ import { ticketsApi } from '@/api/tickets'
 import { TicketStatus, TicketType } from '@/types/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { UserPlus, RotateCcw, FileText, Plus } from 'lucide-react'
 
@@ -33,13 +34,25 @@ function TicketsPage() {
   })
 
   if (isLoading) {
-    return <div className="text-muted-foreground">{t('common.loading')}</div>
+    return (
+      <div>
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-black tracking-tight text-foreground">{t('tickets.title')}</h1>
+          <Skeleton className="h-9 w-28 rounded-md" />
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[72px] rounded-xl" />
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-foreground">{t('tickets.title')}</h1>
+        <h1 className="text-2xl font-black tracking-tight text-foreground">{t('tickets.title')}</h1>
         <Button asChild size="sm">
           <Link to="/tickets/new" className="gap-1.5">
             <Plus size={14} />
@@ -49,8 +62,17 @@ function TicketsPage() {
       </div>
 
       {!tickets?.length ? (
-        <div className="text-muted-foreground text-center py-16 bg-card border border-border rounded-xl">
-          {t('tickets.noTickets')}
+        <div className="rounded-xl border border-border bg-card py-16 text-center">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-accent/10">
+            <FileText size={20} className="text-accent" />
+          </div>
+          <p className="mb-4 text-sm text-muted-foreground">{t('tickets.noTickets')}</p>
+          <Button asChild size="sm">
+            <Link to="/tickets/new" className="gap-1.5">
+              <Plus size={14} />
+              {t('tickets.new')}
+            </Link>
+          </Button>
         </div>
       ) : (
         <div className="space-y-2">

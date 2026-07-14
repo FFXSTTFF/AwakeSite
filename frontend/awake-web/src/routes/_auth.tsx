@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, Outlet } from '@tanstack/react-router'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import { useAuthStore } from '@/store/authStore'
 
 export const Route = createFileRoute('/_auth')({
@@ -17,11 +18,12 @@ function AuthLayout() {
   return (
     <div className="flex min-h-screen bg-bg-page">
       <Sidebar />
-      <main className="flex-1 min-h-screen overflow-auto">
-        <div className="max-w-5xl mx-auto px-6 py-8 md:pt-8 pt-16">
+      <main className="min-h-screen flex-1 overflow-auto">
+        <div className="mx-auto max-w-5xl px-6 pb-24 pt-8 md:pb-8">
           <Outlet />
         </div>
       </main>
+      <MobileTabBar />
     </div>
   )
 }

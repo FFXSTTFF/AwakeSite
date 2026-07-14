@@ -8,6 +8,7 @@ import { ticketsApi } from '@/api/tickets'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { Shield, FileText, Users, ChevronRight, Clock } from 'lucide-react'
 
@@ -35,8 +36,8 @@ function DashboardPage() {
   const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
 
-  const { data: squads } = useQuery({ queryKey: ['squads'], queryFn: () => squadsApi.getAll() })
-  const { data: tickets } = useQuery({ queryKey: ['tickets'], queryFn: () => ticketsApi.getAll() })
+  const { data: squads, isLoading: squadsLoading } = useQuery({ queryKey: ['squads'], queryFn: () => squadsApi.getAll() })
+  const { data: tickets, isLoading: ticketsLoading } = useQuery({ queryKey: ['tickets'], queryFn: () => ticketsApi.getAll() })
 
   const totalMembers = squads?.reduce((sum, s) => sum + s.memberCount, 0) ?? 0
   const pendingTickets = tickets?.filter((t) => t.status === TicketStatus.Pending).length ?? 0
@@ -47,7 +48,7 @@ function DashboardPage() {
       {/* Welcome */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-3xl font-black tracking-tight text-foreground">
             Привет, <span className="text-accent">{user?.username}</span>
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">Клан Awake [LOVE] · STALCRAFT</p>
@@ -59,30 +60,18 @@ function DashboardPage() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          icon={<Users size={17} className="text-blue-400" />}
-          label="Бойцов в клане"
-          value={totalMembers}
-          accent="blue"
-        />
-        <StatCard
-          icon={<Shield size={17} className="text-accent" />}
-          label="Отрядов"
-          value={squads?.length ?? 0}
-          accent="green"
-        />
-        <StatCard
-          icon={<Clock size={17} className="text-yellow-400" />}
-          label="Ожидают рассмотрения"
-          value={pendingTickets}
-          accent="yellow"
-        />
-        <StatCard
-          icon={<FileText size={17} className="text-purple-400" />}
-          label="На рассмотрении"
-          value={activeTickets}
-          accent="purple"
-        />
+        {squadsLoading || ticketsLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[118px] rounded-xl" />
+          ))
+        ) : (
+          <>
+            <StatCard icon={Users} label="Бойцов в клане" value={totalMembers} tone="blue" />
+            <StatCard icon={Shield} label="Отрядов" value={squads?.length ?? 0} tone="green" />
+            <StatCard icon={Clock} label="Ожидают рассмотрения" value={pendingTickets} tone="yellow" />
+            <StatCard icon={FileText} label="На рассмотрении" value={activeTickets} tone="purple" />
+          </>
+        )}
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -100,28 +89,38 @@ function DashboardPage() {
           </CardHeader>
           <Separator />
           <CardContent className="pt-4 space-y-3">
-            {squads?.slice(0, 4).map((squad) => (
-              <Link
-                key={squad.id}
-                to="/squads/$squadId"
-                params={{ squadId: squad.id }}
-                className="flex items-center justify-between group"
-              >
-                <span className="text-sm text-foreground group-hover:text-accent transition-colors">
-                  {squad.name}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-accent/70 rounded-full"
-                      style={{ width: `${(squad.memberCount / 5) * 100}%` }}
-                    />
+            {squadsLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : (
+              squads?.slice(0, 4).map((squad) => (
+                <Link
+                  key={squad.id}
+                  to="/squads/$squadId"
+                  params={{ squadId: squad.id }}
+                  className="flex items-center justify-between group"
+                >
+                  <span className="text-sm text-foreground group-hover:text-accent transition-colors">
+                    {squad.name}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-accent/70 rounded-full"
+                        style={{ width: `${(squad.memberCount / 5) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground w-8 text-right">{squad.memberCount}/5</span>
                   </div>
-                  <span className="text-xs text-muted-foreground w-8 text-right">{squad.memberCount}/5</span>
-                </div>
-              </Link>
-            ))}
-            {!squads?.length && <p className="text-sm text-muted-foreground">—</p>}
+                </Link>
+              ))
+            )}
+            {!squadsLoading && !squads?.length && (
+              <p className="text-sm text-muted-foreground">Отрядов пока нет.</p>
+            )}
           </CardContent>
         </Card>
 
@@ -139,20 +138,30 @@ function DashboardPage() {
           </CardHeader>
           <Separator />
           <CardContent className="pt-4 space-y-3">
-            {tickets?.slice(0, 4).map((ticket) => (
-              <Link
-                key={ticket.id}
-                to="/tickets/$ticketId"
-                params={{ ticketId: ticket.id }}
-                className="flex items-center justify-between group"
-              >
-                <span className="text-sm text-foreground group-hover:text-accent transition-colors truncate max-w-[160px]">
-                  {ticket.gameNickname}
-                </span>
-                <StatusPill status={ticket.status} t={t} />
-              </Link>
-            ))}
-            {!tickets?.length && <p className="text-sm text-muted-foreground">—</p>}
+            {ticketsLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : (
+              tickets?.slice(0, 4).map((ticket) => (
+                <Link
+                  key={ticket.id}
+                  to="/tickets/$ticketId"
+                  params={{ ticketId: ticket.id }}
+                  className="flex items-center justify-between group"
+                >
+                  <span className="text-sm text-foreground group-hover:text-accent transition-colors truncate max-w-[160px]">
+                    {ticket.gameNickname}
+                  </span>
+                  <StatusPill status={ticket.status} t={t} />
+                </Link>
+              ))
+            )}
+            {!ticketsLoading && !tickets?.length && (
+              <p className="text-sm text-muted-foreground">Тикетов пока нет.</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -160,25 +169,27 @@ function DashboardPage() {
   )
 }
 
-function StatCard({ icon, label, value, accent }: {
-  icon: React.ReactNode
+function StatCard({ icon: Icon, label, value, tone }: {
+  icon: React.ComponentType<{ size?: number; className?: string }>
   label: string
   value: number
-  accent: 'blue' | 'green' | 'yellow' | 'purple'
+  tone: 'blue' | 'green' | 'yellow' | 'purple'
 }) {
-  const border = {
-    blue: 'border-blue-400/20',
-    green: 'border-accent/20',
-    yellow: 'border-yellow-400/20',
-    purple: 'border-purple-400/20',
-  }[accent]
+  const styles = {
+    blue:   { border: 'border-blue-400/20',   tile: 'bg-blue-400/10 text-blue-400' },
+    green:  { border: 'border-accent/20',     tile: 'bg-accent/10 text-accent' },
+    yellow: { border: 'border-yellow-400/20', tile: 'bg-yellow-400/10 text-yellow-400' },
+    purple: { border: 'border-purple-400/20', tile: 'bg-purple-400/10 text-purple-400' },
+  }[tone]
 
   return (
-    <Card className={cn('border', border)}>
-      <CardContent className="pt-4 pb-4">
-        <div className="mb-2">{icon}</div>
-        <div className="text-2xl font-bold text-foreground">{value}</div>
-        <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+    <Card className={cn('border transition-transform hover:-translate-y-0.5', styles.border)}>
+      <CardContent className="pb-4 pt-4">
+        <div className={cn('mb-3 flex h-9 w-9 items-center justify-center rounded-lg', styles.tile)}>
+          <Icon size={17} />
+        </div>
+        <div className="text-3xl font-black tracking-tight text-foreground">{value}</div>
+        <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
       </CardContent>
     </Card>
   )
