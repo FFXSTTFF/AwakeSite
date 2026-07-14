@@ -70,7 +70,7 @@ export function MobileTabBar() {
                 {user?.username}
               </span>
               <div className="flex shrink-0 items-center gap-1.5">
-                <NotificationBell />
+                <NotificationBell direction="up" />
                 <Badge className={cn('h-5 border px-1.5 py-0 text-[10px]', RANK_CLASSES[user?.rank ?? 0])}>
                   {t(`users.ranks.${user?.rank ?? 0}`)}
                 </Badge>

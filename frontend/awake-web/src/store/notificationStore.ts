@@ -14,8 +14,14 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
   setNotifications: (items) => set({ notifications: items }),
 
+  // дедуп по id: Sidebar и мобильный лист монтируют по своему NotificationBell,
+  // каждый с собственным SignalR-подключением — событие может прийти дважды
   addNotification: (item) =>
-    set((s) => ({ notifications: [item, ...s.notifications] })),
+    set((s) =>
+      s.notifications.some((n) => n.id === item.id)
+        ? s
+        : { notifications: [item, ...s.notifications] },
+    ),
 
   markAllRead: () =>
     set((s) => ({
