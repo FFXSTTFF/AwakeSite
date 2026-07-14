@@ -4,9 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { squadsApi } from '@/api/squads'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAuthStore } from '@/store/authStore'
+import { UserRank } from '@/types/api'
 import { cn } from '@/lib/utils'
-import { Crown, Shield } from 'lucide-react'
+import { Crown, Shield, Wrench } from 'lucide-react'
 
 export const Route = createFileRoute('/_auth/squads')({
   component: SquadsPage,
@@ -14,6 +17,7 @@ export const Route = createFileRoute('/_auth/squads')({
 
 function SquadsPage() {
   const { t } = useTranslation()
+  const rank = useAuthStore((s) => s.user?.rank ?? 0)
   const { data: squads, isLoading } = useQuery({
     queryKey: ['squads'],
     queryFn: () => squadsApi.getAll(),
@@ -34,7 +38,17 @@ function SquadsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-black tracking-tight text-foreground mb-6">{t('squads.title')}</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-black tracking-tight text-foreground">{t('squads.title')}</h1>
+        {rank >= UserRank.Officer && (
+          <Button asChild variant="outline" className="gap-2">
+            <Link to="/squads/builder">
+              <Wrench size={15} />
+              Собрать отряды
+            </Link>
+          </Button>
+        )}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {squads?.map((squad) => {
           const leader = squad.members.find((m) => m.isLeader)
