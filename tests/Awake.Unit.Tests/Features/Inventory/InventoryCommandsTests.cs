@@ -2,6 +2,7 @@ using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Features.Inventory.Commands.AddInventoryItem;
 using Awake.Application.Features.Inventory.Commands.DeleteBuildProof;
+using Awake.Application.Features.Inventory.Commands.RemoveInventoryItem;
 using Awake.Application.Features.Inventory.Commands.UploadBuildProof;
 using Awake.Application.Features.Items.Dtos;
 using Awake.Domain.Entities;
@@ -139,5 +140,34 @@ public class InventoryCommandsTests
             new DeleteBuildProofCommand(_userId, BuildType.Speed), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RemoveItem_Missing_Fails()
+    {
+        _inventory.Setup(r => r.GetAsync(_userId, "armor1", It.IsAny<CancellationToken>()))
+                  .ReturnsAsync((PlayerInventoryItem?)null);
+        var handler = new RemoveInventoryItemCommandHandler(_inventory.Object);
+
+        var result = await handler.Handle(
+            new RemoveInventoryItemCommand(_userId, "armor1"), CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        _inventory.Verify(r => r.RemoveAsync(It.IsAny<PlayerInventoryItem>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RemoveItem_Existing_Removes()
+    {
+        var entry = new PlayerInventoryItem { UserId = _userId, ItemId = "armor1" };
+        _inventory.Setup(r => r.GetAsync(_userId, "armor1", It.IsAny<CancellationToken>()))
+                  .ReturnsAsync(entry);
+        var handler = new RemoveInventoryItemCommandHandler(_inventory.Object);
+
+        var result = await handler.Handle(
+            new RemoveInventoryItemCommand(_userId, "armor1"), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _inventory.Verify(r => r.RemoveAsync(entry, It.IsAny<CancellationToken>()), Times.Once);
     }
 }
