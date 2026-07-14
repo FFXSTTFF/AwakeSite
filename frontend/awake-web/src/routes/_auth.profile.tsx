@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { playersApi } from '@/api/players'
 import { PlayerProfileSkeleton, PlayerProfileView } from '@/components/PlayerProfileView'
+import { InventorySection } from '@/components/InventorySection'
 
 export const Route = createFileRoute('/_auth/profile')({
   component: ProfilePage,
@@ -36,6 +37,9 @@ function ProfilePage() {
   if (error || !profile) return <p className="text-destructive">Не удалось загрузить профиль.</p>
 
   return (
-    <PlayerProfileView profile={profile} onRefresh={handleRefresh} refreshing={refreshing} />
+    <>
+      <PlayerProfileView profile={profile} onRefresh={handleRefresh} refreshing={refreshing} />
+      <InventorySection />
+    </>
   )
 }

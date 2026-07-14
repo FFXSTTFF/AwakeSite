@@ -46,7 +46,47 @@ async function request<T>(
     return undefined as T
   }
 
-  return response.json() as Promise<T>
+  const text = await response.text()
+  return (text ? JSON.parse(text) : undefined) as T
+}
+
+async function requestForm<T>(path: string, form: FormData): Promise<T> {
+  const token = useAuthStore.getState().accessToken
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  // Content-Type не ставим — браузер сам проставит multipart boundary
+
+  const response = await fetch(`${BASE_URL}/api${path}`, {
+    method: 'POST',
+    headers,
+    credentials: 'include',
+    body: form,
+  })
+  if (!response.ok) {
+    let detail = `HTTP ${response.status}`
+    try {
+      const problem = (await response.json()) as { detail?: string }
+      if (problem.detail) detail = problem.detail
+    } catch {
+      // ignore parse errors
+    }
+    throw new ApiError(response.status, detail)
+  }
+  if (response.status === 204) return undefined as T
+  const text = await response.text()
+  return (text ? JSON.parse(text) : undefined) as T
+}
+
+async function requestBlob(path: string): Promise<Blob> {
+  const token = useAuthStore.getState().accessToken
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const response = await fetch(`${BASE_URL}/api${path}`, {
+    headers,
+    credentials: 'include',
+  })
+  if (!response.ok) throw new ApiError(response.status, `HTTP ${response.status}`)
+  return response.blob()
 }
 
 export const apiClient = {
@@ -54,4 +94,6 @@ export const apiClient = {
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   delete: <T>(path: string) => request<T>('DELETE', path),
+  postForm: <T>(path: string, form: FormData) => requestForm<T>(path, form),
+  getBlob: (path: string) => requestBlob(path),
 }
