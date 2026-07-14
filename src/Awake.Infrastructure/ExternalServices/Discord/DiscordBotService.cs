@@ -443,6 +443,38 @@ public class DiscordBotService(
         }
     }
 
+    // ── Guild members ─────────────────────────────────────────────────────────
+
+    public async Task<IReadOnlyCollection<string>?> GetGuildMemberRoleIdsAsync(
+        string guildId, string discordUserId, CancellationToken ct = default)
+    {
+        if (!EnsureConfigured()) return null;
+        SetAuth();
+        try
+        {
+            var resp = await httpClient.GetAsync(
+                $"{ApiBase}/guilds/{guildId}/members/{discordUserId}", ct);
+            if (!resp.IsSuccessStatusCode) return null; // 404 = не участник сервера
+
+            using var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>(ct);
+            if (doc is null || !doc.RootElement.TryGetProperty("roles", out var roles))
+                return null;
+
+            var result = new List<string>();
+            foreach (var role in roles.EnumerateArray())
+            {
+                var id = role.GetString();
+                if (id is not null) result.Add(id);
+            }
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to fetch guild member roles for {UserId}", discordUserId);
+            return null;
+        }
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task<string?> OpenDmChannelAsync(string userId, CancellationToken ct)

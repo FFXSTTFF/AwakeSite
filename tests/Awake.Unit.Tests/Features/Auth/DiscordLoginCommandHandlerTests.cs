@@ -1,9 +1,12 @@
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
+using Awake.Application.Common.Models;
 using Awake.Application.Features.Auth.Commands.DiscordLogin;
+using Awake.Application.Features.Auth.Commands.SyncDiscordRoles;
 using Awake.Domain.Entities;
 using Awake.Domain.Enums;
 using FluentAssertions;
+using MediatR;
 using Moq;
 
 namespace Awake.Unit.Tests.Features.Auth;
@@ -13,18 +16,34 @@ public class DiscordLoginCommandHandlerTests
     private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<ITicketRepository> _tickets = new();
     private readonly Mock<ITokenService> _tokens = new();
+    private readonly Mock<ISender> _sender = new();
 
     private static readonly DiscordUserInfo Info =
         new("111222333", "oops", "OopsITry", "https://cdn.discordapp.com/avatars/111222333/a.png");
 
     private DiscordLoginCommandHandler BuildHandler() =>
-        new(_users.Object, _tickets.Object, _tokens.Object);
+        new(_users.Object, _tickets.Object, _tokens.Object, _sender.Object);
 
     public DiscordLoginCommandHandlerTests()
     {
         _tokens.Setup(t => t.GenerateAccessToken(It.IsAny<User>())).Returns("jwt");
         _tickets.Setup(t => t.GetUnlinkedByDiscordUserIdAsync("111222333", It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
+        _sender.Setup(s => s.Send(It.IsAny<SyncDiscordRolesCommand>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync(Result<bool>.Success(false));
+    }
+
+    [Fact]
+    public async Task Handle_SendsDiscordRoleSync_BeforeIssuingToken()
+    {
+        _users.Setup(u => u.GetByDiscordUserIdAsync("111222333", It.IsAny<CancellationToken>()))
+              .ReturnsAsync(new User { Id = Guid.NewGuid(), DiscordUserId = "111222333", Username = "x" });
+
+        await BuildHandler().Handle(new DiscordLoginCommand(Info), CancellationToken.None);
+
+        _sender.Verify(s => s.Send(
+            It.Is<SyncDiscordRolesCommand>(c => c.DiscordUserId == "111222333" && c.RoleIds == null),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

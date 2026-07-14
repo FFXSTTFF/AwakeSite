@@ -44,4 +44,8 @@ public interface IDiscordBotService
 
     Task PostCommentAsync(string channelId, string authorUsername, string content, CancellationToken ct = default);
     Task PostMessageAsync(string channelId, string content, CancellationToken ct = default);
+
+    /// <summary>ID ролей участника сервера; null — не участник или запрос не удался.</summary>
+    Task<IReadOnlyCollection<string>?> GetGuildMemberRoleIdsAsync(
+        string guildId, string discordUserId, CancellationToken ct = default);
 }
