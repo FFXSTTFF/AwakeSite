@@ -20,15 +20,16 @@ interface Props {
   profile: PlayerProfileDto
   onRefresh?: () => void
   refreshing?: boolean
+  flagsSlot?: React.ReactNode
 }
 
-export function PlayerProfileView({ profile, onRefresh, refreshing }: Props) {
+export function PlayerProfileView({ profile, onRefresh, refreshing, flagsSlot }: Props) {
   const { stats, loadout, squad } = profile
 
   return (
     <div className="flex flex-col gap-6">
       {/* Шапка: аватар + ники + ранг + отряд */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         {profile.discordAvatarUrl ? (
           <img
             src={profile.discordAvatarUrl}
@@ -55,6 +56,7 @@ export function PlayerProfileView({ profile, onRefresh, refreshing }: Props) {
             )}
           </div>
         </div>
+        {flagsSlot && <div className="ml-auto">{flagsSlot}</div>}
       </div>
 
       {/* Статистика */}

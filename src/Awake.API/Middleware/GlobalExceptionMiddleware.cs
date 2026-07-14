@@ -52,6 +52,13 @@ public class GlobalExceptionMiddleware(RequestDelegate next)
         {
             await WriteProblemDetailsAsync(context, StatusCodes.Status400BadRequest, "Bad Request", ex.Message);
         }
+        catch (BadHttpRequestException ex)
+        {
+            var detail = ex.StatusCode == StatusCodes.Status413PayloadTooLarge
+                ? "Файл слишком большой."
+                : "Некорректный запрос.";
+            await WriteProblemDetailsAsync(context, ex.StatusCode, "Bad Request", detail);
+        }
         catch (Exception ex)
         {
             Log.Error(ex, "Unhandled exception: {Message}", ex.Message);

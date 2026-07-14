@@ -2,7 +2,10 @@ import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { playersApi } from '@/api/players'
 import { ApiError } from '@/api/client'
+import { inventoryApi } from '@/api/inventory'
 import { PlayerProfileSkeleton, PlayerProfileView } from '@/components/PlayerProfileView'
+import { InventoryFlags } from '@/components/InventoryFlags'
+import { ProofModeration } from '@/components/ProofModeration'
 import { useAuth } from '@/hooks/useAuth'
 import { UserRank } from '@/types/api'
 
@@ -20,6 +23,12 @@ function PlayerPage() {
     retry: false,
   })
 
+  const { data: inventory } = useQuery({
+    queryKey: ['inventory', userId],
+    queryFn: () => inventoryApi.getFor(userId),
+    retry: false,
+  })
+
   // Гость может смотреть только свой профиль
   if (rank < UserRank.Member && user?.userId !== userId) {
     return <Navigate to="/profile" />
@@ -32,5 +41,17 @@ function PlayerPage() {
   if (error instanceof ApiError && error.status === 403) return <Navigate to="/profile" />
   if (error || !profile) return <p className="text-destructive">Не удалось загрузить профиль.</p>
 
-  return <PlayerProfileView profile={profile} />
+  return (
+    <PlayerProfileView
+      profile={profile}
+      flagsSlot={
+        inventory ? (
+          <div className="flex flex-col items-end gap-2">
+            <InventoryFlags flags={inventory.flags} size="sm" />
+            {rank >= UserRank.Officer && <ProofModeration userId={userId} flags={inventory.flags} />}
+          </div>
+        ) : null
+      }
+    />
+  )
 }

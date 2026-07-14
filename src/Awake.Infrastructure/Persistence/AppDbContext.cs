@@ -15,9 +15,29 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<DiscordGuildSettings> DiscordGuildSettings => Set<DiscordGuildSettings>();
     public DbSet<PlayerStatsSnapshot> PlayerStatsSnapshots => Set<PlayerStatsSnapshot>();
+    public DbSet<PlayerInventoryItem> PlayerInventoryItems => Set<PlayerInventoryItem>();
+    public DbSet<PlayerBuildProof> PlayerBuildProofs => Set<PlayerBuildProof>();
 
     protected override void OnModelCreating(ModelBuilder builder)
-        => builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+    {
+        builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        builder.Entity<PlayerInventoryItem>(e =>
+        {
+            e.Property(x => x.ItemId).HasMaxLength(64);
+            e.HasIndex(x => new { x.UserId, x.ItemId }).IsUnique();
+            e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PlayerBuildProof>(e =>
+        {
+            e.Property(x => x.ContentType).HasMaxLength(64);
+            e.HasIndex(x => new { x.UserId, x.BuildType }).IsUnique();
+            e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
 
     public override Task<int> SaveChangesAsync(CancellationToken ct = default)
     {

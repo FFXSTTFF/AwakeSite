@@ -157,3 +157,31 @@ export interface LeaderboardEntryDto {
   accuracy: string
   playtime: string
 }
+
+export const BuildType = {
+  Speed: 0,
+  Vitality: 1,
+} as const
+export type BuildType = (typeof BuildType)[keyof typeof BuildType]
+
+export interface PlayerFlags {
+  bio: boolean
+  combat: boolean
+  sniper: boolean
+  speed: boolean
+  vitality: boolean
+}
+
+export interface InventoryItem {
+  itemId: string
+  name: string
+  icon: string | null
+  color: string | null
+  category: string | null
+  unknown: boolean
+}
+
+export interface PlayerInventory {
+  items: InventoryItem[]
+  flags: PlayerFlags
+}
