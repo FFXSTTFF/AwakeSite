@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.AddHttpClient<IDiscordBotService, DiscordBotService>();
         services.AddHttpClient<IDiscordOAuthService, DiscordOAuthService>();
         services.AddHostedService<DiscordGatewayService>();
+        services.AddSingleton<IDiscordRoleSyncSettings, DiscordRoleSyncSettings>();
 
         // Items cache
         services.AddHttpClient("stalzone");

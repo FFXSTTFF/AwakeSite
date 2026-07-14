@@ -2,6 +2,7 @@ using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Common.Models;
 using Awake.Application.Features.Auth.Commands.Login;
+using Awake.Application.Features.Auth.Commands.SyncDiscordRoles;
 using Awake.Domain.Entities;
 using Awake.Domain.Enums;
 using MediatR;
@@ -11,7 +12,8 @@ namespace Awake.Application.Features.Auth.Commands.DiscordLogin;
 public class DiscordLoginCommandHandler(
     IUserRepository userRepository,
     ITicketRepository ticketRepository,
-    ITokenService tokenService
+    ITokenService tokenService,
+    ISender sender
 ) : IRequestHandler<DiscordLoginCommand, Result<LoginResponse>>
 {
     public async Task<Result<LoginResponse>> Handle(
@@ -74,6 +76,10 @@ public class DiscordLoginCommandHandler(
             await userRepository.UpdateAsync(user, cancellationToken);
         else if (nicknameUpdated)
             await userRepository.UpdateAsync(user, cancellationToken);
+
+        // Сверка ролей Discord (если синк включён): бот мог быть офлайн в момент
+        // выдачи роли — при входе приводим ранг к актуальным ролям, до выпуска токена
+        await sender.Send(new SyncDiscordRolesCommand(info.Id), cancellationToken);
 
         var accessToken = tokenService.GenerateAccessToken(user);
         return Result<LoginResponse>.Success(
