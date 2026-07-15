@@ -45,6 +45,12 @@ public class SquadRepository(AppDbContext context) : ISquadRepository
         await context.SaveChangesAsync(ct);
     }
 
+    public async Task UpdateAsync(Squad squad, CancellationToken ct = default)
+    {
+        context.Squads.Update(squad);
+        await context.SaveChangesAsync(ct);
+    }
+
     public async Task<Squad?> GetByIdWithMembersAsync(Guid id, CancellationToken ct = default)
         => await context.Squads
             .Include(s => s.Members)
