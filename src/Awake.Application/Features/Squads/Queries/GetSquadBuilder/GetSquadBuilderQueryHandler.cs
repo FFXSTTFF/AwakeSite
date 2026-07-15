@@ -1,8 +1,6 @@
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Common.Models;
-using Awake.Application.Features.Inventory;
-using Awake.Application.Features.Items.Dtos;
 using Awake.Domain.Entities;
 using Awake.Domain.Enums;
 using MediatR;
@@ -34,40 +32,12 @@ public class GetSquadBuilderQueryHandler(
             .Where(u => u is not null)
             .DistinctBy(u => u.Id)
             .ToList();
-        var allIds = allUsers.Select(u => u.Id).ToList();
 
-        var inventories = await inventoryRepository.GetByUserIdsAsync(allIds, cancellationToken);
-        var proofs = await proofRepository.GetByUserIdsAsync(allIds, cancellationToken);
+        var enriched = await SquadMemberEnricher.ComputeAsync(
+            allUsers, inventoryRepository, proofRepository, itemCache, snapshotRepository, cancellationToken);
 
-        var nicknames = allUsers
-            .Where(u => !string.IsNullOrEmpty(u.GameNickname))
-            .Select(u => u.GameNickname!)
-            .ToList();
-        var snapshots = (await snapshotRepository.GetByNicknamesAsync(nicknames, cancellationToken))
-            .ToDictionary(s => s.GameNickname, StringComparer.OrdinalIgnoreCase);
-
-        var itemsByUser = inventories.ToLookup(i => i.UserId);
-        var proofsByUser = proofs.ToLookup(p => p.UserId);
-
-        BuilderFighterDto ToFighter(User u)
-        {
-            var known = itemsByUser[u.Id]
-                .Select(entry => itemCache.GetById(entry.ItemId))
-                .Where(i => i is not null)
-                .Cast<ItemDto>();
-            var userProofs = proofsByUser[u.Id].ToList();
-            var flags = PlayerFlagsCalculator.Calculate(
-                known,
-                hasSpeedProof: userProofs.Any(p => p.BuildType == BuildType.Speed),
-                hasVitalityProof: userProofs.Any(p => p.BuildType == BuildType.Vitality));
-
-            double? kd = u.GameNickname is not null
-                && snapshots.TryGetValue(u.GameNickname, out var snap)
-                    ? snap.KdRatio
-                    : null;
-
-            return new BuilderFighterDto(u.Id, u.Username, u.GameNickname, u.DiscordAvatarUrl, flags, kd);
-        }
+        BuilderFighterDto ToFighter(User u) =>
+            new(u.Id, u.Username, u.GameNickname, u.DiscordAvatarUrl, enriched[u.Id].Flags, enriched[u.Id].Kd);
 
         var fightersById = allUsers.ToDictionary(u => u.Id, ToFighter);
 
