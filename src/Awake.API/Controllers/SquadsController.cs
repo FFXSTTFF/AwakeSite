@@ -23,6 +23,7 @@ public record MoveMemberRequest(Guid UserId);
 public class SquadsController(ISender sender) : ControllerBase
 {
     [HttpGet]
+    [RankAuthorize(UserRank.Member)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         var result = await sender.Send(new GetSquadsQuery(), ct);
@@ -30,6 +31,7 @@ public class SquadsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [RankAuthorize(UserRank.Member)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new GetSquadByIdQuery(id), ct);

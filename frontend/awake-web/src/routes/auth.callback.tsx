@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 import { useAuthStore } from '@/store/authStore'
-import type { UserRank } from '@/types/api'
+import { UserRank } from '@/types/api'
 
 export const Route = createFileRoute('/auth/callback')({
   component: AuthCallbackPage,
@@ -38,7 +38,7 @@ function AuthCallbackPage() {
       { userId, username, rank: rankNum as UserRank },
       accessToken,
     )
-    void navigate({ to: '/dashboard' })
+    void navigate({ to: rankNum >= UserRank.Member ? '/dashboard' : '/tickets' })
   }, [login, navigate])
 
   return (
