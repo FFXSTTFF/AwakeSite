@@ -15,7 +15,7 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(squad.name)
-  const cancellingRef = useRef(false)
+  const suppressCommitRef = useRef(false)
 
   const rename = useMutation({
     mutationFn: (name: string) => squadsApi.rename(squad.id, name),
@@ -30,16 +30,18 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
   function startEdit(e: MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    cancellingRef.current = false
+    suppressCommitRef.current = false
     setDraft(squad.name)
     setEditing(true)
   }
 
   function commit() {
-    if (cancellingRef.current) {
-      cancellingRef.current = false
+    if (suppressCommitRef.current) {
+      suppressCommitRef.current = false
       return
     }
+    // unmounting the focused input re-fires blur -> commit; suppress that re-entry
+    suppressCommitRef.current = true
     const trimmed = draft.trim()
     setEditing(false)
     if (trimmed && trimmed !== squad.name) {
@@ -48,7 +50,7 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
   }
 
   function cancel() {
-    cancellingRef.current = true
+    suppressCommitRef.current = true
     setDraft(squad.name)
     setEditing(false)
   }
