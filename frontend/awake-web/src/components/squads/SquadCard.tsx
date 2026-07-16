@@ -66,7 +66,11 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
                 autoFocus
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
                 onKeyDown={(e) => {
                   e.stopPropagation()
                   if (e.key === 'Enter') commit()
