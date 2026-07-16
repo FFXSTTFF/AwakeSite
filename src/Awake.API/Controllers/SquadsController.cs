@@ -2,6 +2,7 @@ using Awake.API.Filters;
 using Awake.Application.Features.Squads.Commands.AddMember;
 using Awake.Application.Features.Squads.Commands.MoveMember;
 using Awake.Application.Features.Squads.Commands.RemoveMember;
+using Awake.Application.Features.Squads.Commands.RenameSquad;
 using Awake.Application.Features.Squads.Commands.SetLeader;
 using Awake.Application.Features.Squads.Queries.GetSquadBuilder;
 using Awake.Application.Features.Squads.Queries.GetSquadById;
@@ -16,6 +17,7 @@ namespace Awake.API.Controllers;
 public record AddMemberRequest(Guid UserId);
 public record SetLeaderRequest(Guid UserId);
 public record MoveMemberRequest(Guid UserId);
+public record RenameSquadRequest(string Name);
 
 [ApiController]
 [Route("api/squads")]
@@ -63,6 +65,16 @@ public class SquadsController(ISender sender) : ControllerBase
     public async Task<IActionResult> SetLeader(Guid id, SetLeaderRequest request, CancellationToken ct)
     {
         var result = await sender.Send(new SetSquadLeaderCommand(id, request.UserId), ct);
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    [HttpPut("{id:guid}/name")]
+    [RankAuthorize(UserRank.Officer)]
+    public async Task<IActionResult> Rename(Guid id, RenameSquadRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new RenameSquadCommand(id, request.Name), ct);
         return result.IsSuccess
             ? NoContent()
             : Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
