@@ -36,8 +36,8 @@ public class MoveSquadMemberCommandHandlerTests
             new MoveSquadMemberCommand(_squadId, _userId), CancellationToken.None);
 
         result.Value.Should().BeTrue();
-        _squads.Verify(r => r.RemoveMemberAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        _squads.Verify(r => r.AddMemberAsync(
+        _squads.Verify(r => r.MoveMemberAsync(
+            null,
             It.Is<SquadMember>(m => m.SquadId == _squadId && m.UserId == _userId && !m.IsLeader),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -52,8 +52,10 @@ public class MoveSquadMemberCommandHandlerTests
             new MoveSquadMemberCommand(_squadId, _userId), CancellationToken.None);
 
         result.Value.Should().BeTrue();
-        _squads.Verify(r => r.RemoveMemberAsync(oldSquadId, _userId, It.IsAny<CancellationToken>()), Times.Once);
-        _squads.Verify(r => r.AddMemberAsync(It.IsAny<SquadMember>(), It.IsAny<CancellationToken>()), Times.Once);
+        _squads.Verify(r => r.MoveMemberAsync(
+            oldSquadId,
+            It.Is<SquadMember>(m => m.SquadId == _squadId && m.UserId == _userId && !m.IsLeader),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -66,8 +68,7 @@ public class MoveSquadMemberCommandHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeFalse();
-        _squads.Verify(r => r.RemoveMemberAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        _squads.Verify(r => r.AddMemberAsync(It.IsAny<SquadMember>(), It.IsAny<CancellationToken>()), Times.Never);
+        _squads.Verify(r => r.MoveMemberAsync(It.IsAny<Guid?>(), It.IsAny<SquadMember>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -81,7 +82,7 @@ public class MoveSquadMemberCommandHandlerTests
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be("Отряд укомплектован (5/5).");
-        _squads.Verify(r => r.RemoveMemberAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _squads.Verify(r => r.MoveMemberAsync(It.IsAny<Guid?>(), It.IsAny<SquadMember>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

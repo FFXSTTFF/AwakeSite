@@ -87,7 +87,9 @@ public class SquadsController(ISender sender) : ControllerBase
     public async Task<IActionResult> GetBuilder(CancellationToken ct)
     {
         var result = await sender.Send(new GetSquadBuilderQuery(), ct);
-        return Ok(result.Value);
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
     }
 
     [HttpPost("{id:guid}/move-member")]

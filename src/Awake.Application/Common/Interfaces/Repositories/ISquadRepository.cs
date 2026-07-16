@@ -10,6 +10,7 @@ public interface ISquadRepository
     Task<int> GetMemberCountAsync(Guid squadId, CancellationToken ct = default);
     Task AddMemberAsync(SquadMember member, CancellationToken ct = default);
     Task RemoveMemberAsync(Guid squadId, Guid userId, CancellationToken ct = default);
+    Task MoveMemberAsync(Guid? fromSquadId, SquadMember member, CancellationToken ct = default);
     Task UpdateMemberAsync(SquadMember member, CancellationToken ct = default);
     Task UpdateAsync(Squad squad, CancellationToken ct = default);
     Task<Squad?> GetByIdWithMembersAsync(Guid id, CancellationToken ct = default);

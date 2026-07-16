@@ -31,10 +31,7 @@ public class MoveSquadMemberCommandHandler(
         if (count >= MaxSquadSize)
             return Result<bool>.Failure("Отряд укомплектован (5/5).");
 
-        if (current is not null)
-            await squadRepository.RemoveMemberAsync(current.SquadId, request.UserId, cancellationToken);
-
-        await squadRepository.AddMemberAsync(new SquadMember
+        await squadRepository.MoveMemberAsync(current?.SquadId, new SquadMember
         {
             SquadId = request.SquadId,
             UserId = request.UserId,
