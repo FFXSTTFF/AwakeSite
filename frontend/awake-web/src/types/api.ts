@@ -27,6 +27,8 @@ export interface SquadMemberDto {
   gameNickname: string | null
   isLeader: boolean
   joinedAt: string
+  flags: PlayerFlags
+  kd: number | null
 }
 
 export interface SquadDto {
