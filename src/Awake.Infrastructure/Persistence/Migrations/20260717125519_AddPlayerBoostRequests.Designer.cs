@@ -3,6 +3,7 @@ using System;
 using Awake.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Awake.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260717125519_AddPlayerBoostRequests")]
+    partial class AddPlayerBoostRequests
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,7 +45,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
 
                     b.HasKey("GuildId");
 
-                    b.ToTable("DiscordGuildSettings", (string)null);
+                    b.ToTable("DiscordGuildSettings");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.Notification", b =>
@@ -74,7 +77,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.PlayerBoostRequest", b =>
@@ -100,7 +103,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "BoostType")
                         .IsUnique();
 
-                    b.ToTable("PlayerBoostRequests", (string)null);
+                    b.ToTable("PlayerBoostRequests");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.PlayerBuildProof", b =>
@@ -135,7 +138,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "BuildType")
                         .IsUnique();
 
-                    b.ToTable("PlayerBuildProofs", (string)null);
+                    b.ToTable("PlayerBuildProofs");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.PlayerInventoryItem", b =>
@@ -163,7 +166,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "ItemId")
                         .IsUnique();
 
-                    b.ToTable("PlayerInventoryItems", (string)null);
+                    b.ToTable("PlayerInventoryItems");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.PlayerStatsSnapshot", b =>
@@ -214,7 +217,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                     b.HasIndex("GameNickname")
                         .IsUnique();
 
-                    b.ToTable("PlayerStatsSnapshots", (string)null);
+                    b.ToTable("PlayerStatsSnapshots");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.RefreshToken", b =>
@@ -250,7 +253,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.Squad", b =>
@@ -278,7 +281,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                     b.HasIndex("Number")
                         .IsUnique();
 
-                    b.ToTable("Squads", null, t =>
+                    b.ToTable("Squads", t =>
                         {
                             t.HasCheckConstraint("CK_Squad_Number", "\"Number\" BETWEEN 1 AND 5");
                         });
@@ -359,7 +362,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsLeader\" = true");
 
-                    b.ToTable("SquadMembers", (string)null);
+                    b.ToTable("SquadMembers");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.Ticket", b =>
@@ -419,7 +422,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ReviewedBy");
 
-                    b.ToTable("Tickets", (string)null);
+                    b.ToTable("Tickets");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.TicketComment", b =>
@@ -455,7 +458,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("TicketComments", (string)null);
+                    b.ToTable("TicketComments");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.User", b =>
@@ -510,7 +513,7 @@ namespace Awake.Infrastructure.Persistence.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Awake.Domain.Entities.PlayerBoostRequest", b =>
