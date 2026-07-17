@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { InventoryFlags } from '@/components/InventoryFlags'
-import type { PlayerFlags } from '@/types/api'
+import { BoostChips } from '@/components/boosts/BoostChips'
+import type { BoostType, PlayerFlags } from '@/types/api'
 
 const PANEL_WIDTH = 224
 const VIEWPORT_MARGIN = 12
@@ -12,11 +13,13 @@ export function MemberHoverInfo({
   nickname,
   flags,
   kd,
+  boosts = [],
   children,
 }: {
   nickname: string
   flags: PlayerFlags
   kd: number | null
+  boosts?: BoostType[]
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -79,6 +82,11 @@ export function MemberHoverInfo({
           <div className="mt-2">
             <InventoryFlags flags={flags} size="sm" />
           </div>
+          {boosts.length > 0 && (
+            <div className="mt-2">
+              <BoostChips selected={boosts} short />
+            </div>
+          )}
         </div>
       )}
     </div>
