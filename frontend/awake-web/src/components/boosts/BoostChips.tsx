@@ -8,10 +8,12 @@ export function BoostChips({
   selected,
   onToggle,
   short = false,
+  disabled = false,
 }: {
   selected: BoostType[]
   onToggle?: (type: BoostType) => void
   short?: boolean
+  disabled?: boolean
 }) {
   const { t } = useTranslation()
   const readonly = !onToggle
@@ -37,7 +39,11 @@ export function BoostChips({
             key={type}
             type="button"
             onClick={() => onToggle(type)}
-            className={cn(cls, 'cursor-pointer hover:border-accent/50')}
+            disabled={disabled}
+            className={cn(
+              cls,
+              'cursor-pointer hover:border-accent/50 disabled:pointer-events-none disabled:opacity-60',
+            )}
           >
             {label}
           </button>

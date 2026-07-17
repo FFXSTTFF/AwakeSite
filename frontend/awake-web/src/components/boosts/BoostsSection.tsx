@@ -44,7 +44,7 @@ export function BoostsSection() {
         <h2 className="text-base font-semibold text-foreground">{t('boosts.myTitle')}</h2>
         <p className="mt-1 text-xs text-muted-foreground">{t('boosts.myHint')}</p>
         <div className="mt-4">
-          <BoostChips selected={selected} onToggle={toggle} />
+          <BoostChips selected={selected} onToggle={toggle} disabled={mutation.isPending} />
         </div>
       </CardContent>
     </Card>
