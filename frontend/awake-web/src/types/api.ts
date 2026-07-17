@@ -29,6 +29,7 @@ export interface SquadMemberDto {
   joinedAt: string
   flags: PlayerFlags
   kd: number | null
+  boostTypes: BoostType[]
 }
 
 export interface SquadDto {
@@ -142,6 +143,7 @@ export interface PlayerProfileDto {
   squad: PlayerSquadDto | null
   stats: PlayerStatsDto | null
   loadout: Loadout | null
+  boosts: BoostType[]
 }
 
 export interface TicketDetailDto extends TicketListItemDto {
@@ -165,6 +167,28 @@ export const BuildType = {
   Vitality: 1,
 } as const
 export type BuildType = (typeof BuildType)[keyof typeof BuildType]
+
+export const BoostType = {
+  Damage: 0,
+  ShortDamage: 1,
+  Speed: 2,
+  Defense: 3,
+} as const
+export type BoostType = (typeof BoostType)[keyof typeof BoostType]
+
+export const ALL_BOOST_TYPES: readonly BoostType[] = [
+  BoostType.Damage,
+  BoostType.ShortDamage,
+  BoostType.Speed,
+  BoostType.Defense,
+]
+
+export interface BoostSummaryEntry {
+  userId: string
+  username: string
+  gameNickname: string | null
+  boostTypes: BoostType[]
+}
 
 export interface PlayerFlags {
   bio: boolean

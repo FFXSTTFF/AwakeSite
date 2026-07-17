@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { playersApi } from '@/api/players'
 import { PlayerProfileSkeleton, PlayerProfileView } from '@/components/PlayerProfileView'
 import { InventorySection } from '@/components/InventorySection'
+import { BoostsSection } from '@/components/boosts/BoostsSection'
 
 export const Route = createFileRoute('/_auth/profile')({
   component: ProfilePage,
@@ -39,6 +40,7 @@ function ProfilePage() {
   return (
     <>
       <PlayerProfileView profile={profile} onRefresh={handleRefresh} refreshing={refreshing} />
+      <BoostsSection />
       <InventorySection />
     </>
   )

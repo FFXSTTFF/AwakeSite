@@ -74,12 +74,23 @@
     "playerData": "Player data",
     "noPlayerData": "No data found"
   },
+  "boosts": {
+    "title": "Boosts",
+    "myTitle": "Needed boosts",
+    "myHint": "Mark the buffs you need for clan wars — officers and clan members will see them",
+    "types": { "0": "Damage", "1": "Short damage", "2": "Speed", "3": "Defense" },
+    "typesShort": { "0": "Damage", "1": "Short dmg", "2": "Speed", "3": "Defense" },
+    "player": "Player",
+    "empty": "Nobody has marked needed boosts yet",
+    "emptyHint": "You can mark yours on your profile page"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "squads": "Squads",
     "tickets": "Tickets",
     "manage": "Manage",
     "settings": "Settings",
+    "boosts": "Boosts",
     "logout": "Log out"
   },
   "common": {
