@@ -11,6 +11,7 @@ public class GetSquadByIdQueryHandler(
     ISquadRepository squadRepository,
     IPlayerInventoryRepository inventoryRepository,
     IPlayerBuildProofRepository proofRepository,
+    IPlayerBoostRequestRepository boostRepository,
     IItemCacheService itemCache,
     IPlayerStatsSnapshotRepository snapshotRepository
 ) : IRequestHandler<GetSquadByIdQuery, SquadDto>
@@ -24,7 +25,7 @@ public class GetSquadByIdQueryHandler(
 
         var users = squad.Members.Select(m => m.User).ToList();
         var enriched = await SquadMemberEnricher.ComputeAsync(
-            users, inventoryRepository, proofRepository, itemCache, snapshotRepository, cancellationToken);
+            users, inventoryRepository, proofRepository, boostRepository, itemCache, snapshotRepository, cancellationToken);
 
         return new SquadDto(
             squad.Id,
@@ -40,7 +41,8 @@ public class GetSquadByIdQueryHandler(
                     m.IsLeader,
                     m.JoinedAt,
                     enriched[m.UserId].Flags,
-                    enriched[m.UserId].Kd))
+                    enriched[m.UserId].Kd,
+                    enriched[m.UserId].BoostTypes))
                 .ToList(),
             squad.Members.Count);
     }

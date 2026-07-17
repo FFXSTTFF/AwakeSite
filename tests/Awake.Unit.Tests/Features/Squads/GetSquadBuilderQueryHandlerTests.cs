@@ -15,12 +15,13 @@ public class GetSquadBuilderQueryHandlerTests
     private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<IPlayerInventoryRepository> _inventory = new();
     private readonly Mock<IPlayerBuildProofRepository> _proofs = new();
+    private readonly Mock<IPlayerBoostRequestRepository> _boosts = new();
     private readonly Mock<IItemCacheService> _cache = new();
     private readonly Mock<IPlayerStatsSnapshotRepository> _snapshots = new();
 
     private GetSquadBuilderQueryHandler BuildHandler() => new(
         _squads.Object, _users.Object, _inventory.Object,
-        _proofs.Object, _cache.Object, _snapshots.Object);
+        _proofs.Object, _boosts.Object, _cache.Object, _snapshots.Object);
 
     private static User MakeUser(UserRank rank = UserRank.Member, string? nickname = null) =>
         new() { Username = "u_" + Guid.NewGuid().ToString("N")[..6], Rank = rank, GameNickname = nickname };
@@ -30,6 +31,8 @@ public class GetSquadBuilderQueryHandlerTests
         _inventory.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
                   .ReturnsAsync([]);
         _proofs.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync([]);
+        _boosts.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync([]);
         _snapshots.Setup(r => r.GetByNicknamesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
                   .ReturnsAsync([]);
@@ -69,6 +72,8 @@ public class GetSquadBuilderQueryHandlerTests
                   .ReturnsAsync([new PlayerInventoryItem { UserId = user.Id, ItemId = "skif5" }]);
         _proofs.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync([new PlayerBuildProof { UserId = user.Id, BuildType = BuildType.Speed }]);
+        _boosts.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync([]);
         _cache.Setup(c => c.GetById("skif5"))
               .Returns(new ItemDto("skif5", "armor/combined", "Скиф-5", "i.png", "RANK_MASTER"));
         _snapshots.Setup(r => r.GetByNicknamesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))

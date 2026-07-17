@@ -20,4 +20,5 @@ public record PlayerProfileDto(
     string? GameNickname,
     PlayerSquadDto? Squad,
     PlayerStatsDto? Stats,
-    Loadout? Loadout);
+    Loadout? Loadout,
+    IReadOnlyList<BoostType> Boosts);

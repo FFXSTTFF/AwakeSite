@@ -14,9 +14,10 @@ public class GetPlayerProfileQueryHandlerTests
     private readonly Mock<ISquadRepository> _squads = new();
     private readonly Mock<ITicketRepository> _tickets = new();
     private readonly Mock<IPlayerStatsSnapshotRepository> _snapshots = new();
+    private readonly Mock<IPlayerBoostRequestRepository> _boosts = new();
 
     private GetPlayerProfileQueryHandler BuildHandler() =>
-        new(_users.Object, _squads.Object, _tickets.Object, _snapshots.Object);
+        new(_users.Object, _squads.Object, _tickets.Object, _snapshots.Object, _boosts.Object);
 
     private static User MakeUser(Guid id) => new()
     {
@@ -62,6 +63,8 @@ public class GetPlayerProfileQueryHandlerTests
                       ClanHistory = [new ClanEntry("Awake", "LOVE", "")],
                       FetchedAt = DateTime.UtcNow,
                   });
+        _boosts.Setup(b => b.GetByUserIdAsync(id, It.IsAny<CancellationToken>()))
+               .ReturnsAsync([]);
 
         var result = await BuildHandler().Handle(new GetPlayerProfileQuery(id), CancellationToken.None);
 
@@ -85,6 +88,8 @@ public class GetPlayerProfileQueryHandlerTests
                .ReturnsAsync((SquadMember?)null);
         _tickets.Setup(t => t.GetByAuthorAsync(id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
+        _boosts.Setup(b => b.GetByUserIdAsync(id, It.IsAny<CancellationToken>()))
+               .ReturnsAsync([]);
 
         var result = await BuildHandler().Handle(new GetPlayerProfileQuery(id), CancellationToken.None);
 

@@ -8,6 +8,7 @@ public class GetSquadsQueryHandler(
     ISquadRepository squadRepository,
     IPlayerInventoryRepository inventoryRepository,
     IPlayerBuildProofRepository proofRepository,
+    IPlayerBoostRequestRepository boostRepository,
     IItemCacheService itemCache,
     IPlayerStatsSnapshotRepository snapshotRepository
 ) : IRequestHandler<GetSquadsQuery, IReadOnlyList<SquadDto>>
@@ -19,7 +20,7 @@ public class GetSquadsQueryHandler(
         var squads = await squadRepository.GetAllWithMembersAsync(cancellationToken);
         var allUsers = squads.SelectMany(s => s.Members).Select(m => m.User).ToList();
         var enriched = await SquadMemberEnricher.ComputeAsync(
-            allUsers, inventoryRepository, proofRepository, itemCache, snapshotRepository, cancellationToken);
+            allUsers, inventoryRepository, proofRepository, boostRepository, itemCache, snapshotRepository, cancellationToken);
 
         return squads
             .OrderBy(s => s.Number)
@@ -37,7 +38,8 @@ public class GetSquadsQueryHandler(
                         m.IsLeader,
                         m.JoinedAt,
                         enriched[m.UserId].Flags,
-                        enriched[m.UserId].Kd))
+                        enriched[m.UserId].Kd,
+                        enriched[m.UserId].BoostTypes))
                     .ToList(),
                 s.Members.Count))
             .ToList();
