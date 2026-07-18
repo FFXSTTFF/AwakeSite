@@ -44,7 +44,8 @@ public class GetPlayerProfileQueryHandler(
         var tickets = await ticketRepository.GetByAuthorAsync(user.Id, cancellationToken);
         var loadout = tickets.FirstOrDefault(t => t.Loadout is not null)?.Loadout;
 
-        var boosts = await boostRepository.GetByUserIdAsync(user.Id, cancellationToken);
+        var boosts = (await boostRepository.GetByUserIdAsync(user.Id, cancellationToken))
+            .Select(b => b.BoostType).ToList();
 
         return Result<PlayerProfileDto>.Success(new PlayerProfileDto(
             user.Id, user.Username, user.DiscordUsername, user.DiscordAvatarUrl,

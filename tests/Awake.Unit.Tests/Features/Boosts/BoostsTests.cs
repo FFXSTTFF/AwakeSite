@@ -24,8 +24,10 @@ public class BoostsTests
         result.IsSuccess.Should().BeTrue();
         _repo.Verify(r => r.ReplaceForUserAsync(
             _userId,
-            It.Is<IReadOnlyList<BoostType>>(l =>
-                l.Count == 2 && l.Contains(BoostType.Speed) && l.Contains(BoostType.Damage)),
+            It.Is<IReadOnlyList<PlayerBoostRequest>>(l =>
+                l.Count == 2 &&
+                l.Any(x => x.BoostType == BoostType.Speed) &&
+                l.Any(x => x.BoostType == BoostType.Damage)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -40,7 +42,7 @@ public class BoostsTests
         result.IsSuccess.Should().BeTrue();
         _repo.Verify(r => r.ReplaceForUserAsync(
             _userId,
-            It.Is<IReadOnlyList<BoostType>>(l => l.Count == 0),
+            It.Is<IReadOnlyList<PlayerBoostRequest>>(l => l.Count == 0),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

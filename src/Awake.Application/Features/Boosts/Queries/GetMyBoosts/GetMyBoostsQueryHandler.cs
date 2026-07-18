@@ -8,7 +8,8 @@ public class GetMyBoostsQueryHandler(
     IPlayerBoostRequestRepository boostRepository
 ) : IRequestHandler<GetMyBoostsQuery, IReadOnlyList<BoostType>>
 {
-    public Task<IReadOnlyList<BoostType>> Handle(
+    public async Task<IReadOnlyList<BoostType>> Handle(
         GetMyBoostsQuery request, CancellationToken cancellationToken) =>
-        boostRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+        (await boostRepository.GetByUserIdAsync(request.UserId, cancellationToken))
+            .Select(r => r.BoostType).ToList();
 }
