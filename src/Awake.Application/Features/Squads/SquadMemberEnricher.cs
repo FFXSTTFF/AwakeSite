@@ -10,10 +10,11 @@ namespace Awake.Application.Features.Squads;
 
 public static class SquadMemberEnricher
 {
-    public static async Task<IReadOnlyDictionary<Guid, (PlayerFlagsDto Flags, double? Kd)>> ComputeAsync(
+    public static async Task<IReadOnlyDictionary<Guid, (PlayerFlagsDto Flags, double? Kd, IReadOnlyList<BoostType> BoostTypes)>> ComputeAsync(
         IReadOnlyList<User> users,
         IPlayerInventoryRepository inventoryRepository,
         IPlayerBuildProofRepository proofRepository,
+        IPlayerBoostRequestRepository boostRepository,
         IItemCacheService itemCache,
         IPlayerStatsSnapshotRepository snapshotRepository,
         CancellationToken ct = default)
@@ -21,6 +22,8 @@ public static class SquadMemberEnricher
         var ids = users.Select(u => u.Id).ToList();
         var inventories = await inventoryRepository.GetByUserIdsAsync(ids, ct);
         var proofs = await proofRepository.GetByUserIdsAsync(ids, ct);
+        var boosts = await boostRepository.GetByUserIdsAsync(ids, ct);
+        var boostsByUser = boosts.ToLookup(b => b.UserId);
 
         var nicknames = users
             .Where(u => !string.IsNullOrEmpty(u.GameNickname))
@@ -49,7 +52,12 @@ public static class SquadMemberEnricher
                     ? snap.KdRatio
                     : null;
 
-            return (flags, kd);
+            IReadOnlyList<BoostType> userBoosts = boostsByUser[u.Id]
+                .Select(b => b.BoostType)
+                .OrderBy(t => t)
+                .ToList();
+
+            return (flags, kd, userBoosts);
         });
     }
 }

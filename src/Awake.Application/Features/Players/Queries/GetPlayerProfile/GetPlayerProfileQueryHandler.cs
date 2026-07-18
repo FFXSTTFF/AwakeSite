@@ -8,7 +8,8 @@ public class GetPlayerProfileQueryHandler(
     IUserRepository userRepository,
     ISquadRepository squadRepository,
     ITicketRepository ticketRepository,
-    IPlayerStatsSnapshotRepository snapshotRepository
+    IPlayerStatsSnapshotRepository snapshotRepository,
+    IPlayerBoostRequestRepository boostRepository
 ) : IRequestHandler<GetPlayerProfileQuery, Result<PlayerProfileDto>>
 {
     public async Task<Result<PlayerProfileDto>> Handle(
@@ -43,8 +44,10 @@ public class GetPlayerProfileQueryHandler(
         var tickets = await ticketRepository.GetByAuthorAsync(user.Id, cancellationToken);
         var loadout = tickets.FirstOrDefault(t => t.Loadout is not null)?.Loadout;
 
+        var boosts = await boostRepository.GetByUserIdAsync(user.Id, cancellationToken);
+
         return Result<PlayerProfileDto>.Success(new PlayerProfileDto(
             user.Id, user.Username, user.DiscordUsername, user.DiscordAvatarUrl,
-            user.Rank, user.GameNickname, squad, stats, loadout));
+            user.Rank, user.GameNickname, squad, stats, loadout, boosts));
     }
 }

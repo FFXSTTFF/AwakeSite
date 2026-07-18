@@ -18,6 +18,7 @@ import { Route as AuthSquadsRouteImport } from './routes/_auth.squads'
 import { Route as AuthSettingsRouteImport } from './routes/_auth.settings'
 import { Route as AuthProfileRouteImport } from './routes/_auth.profile'
 import { Route as AuthDashboardRouteImport } from './routes/_auth.dashboard'
+import { Route as AuthBoostsRouteImport } from './routes/_auth.boosts'
 import { Route as AuthTicketsIndexRouteImport } from './routes/_auth.tickets.index'
 import { Route as AuthSquadsIndexRouteImport } from './routes/_auth.squads.index'
 import { Route as AuthTicketsNewRouteImport } from './routes/_auth.tickets.new'
@@ -71,6 +72,11 @@ const AuthDashboardRoute = AuthDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthBoostsRoute = AuthBoostsRouteImport.update({
+  id: '/boosts',
+  path: '/boosts',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthTicketsIndexRoute = AuthTicketsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -115,6 +121,7 @@ const AuthManageUsersRoute = AuthManageUsersRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/boosts': typeof AuthBoostsRoute
   '/dashboard': typeof AuthDashboardRoute
   '/profile': typeof AuthProfileRoute
   '/settings': typeof AuthSettingsRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/boosts': typeof AuthBoostsRoute
   '/dashboard': typeof AuthDashboardRoute
   '/profile': typeof AuthProfileRoute
   '/settings': typeof AuthSettingsRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/_auth/boosts': typeof AuthBoostsRoute
   '/_auth/dashboard': typeof AuthDashboardRoute
   '/_auth/profile': typeof AuthProfileRoute
   '/_auth/settings': typeof AuthSettingsRoute
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/boosts'
     | '/dashboard'
     | '/profile'
     | '/settings'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/boosts'
     | '/dashboard'
     | '/profile'
     | '/settings'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/login'
+    | '/_auth/boosts'
     | '/_auth/dashboard'
     | '/_auth/profile'
     | '/_auth/settings'
@@ -292,6 +304,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthDashboardRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/boosts': {
+      id: '/_auth/boosts'
+      path: '/boosts'
+      fullPath: '/boosts'
+      preLoaderRoute: typeof AuthBoostsRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/tickets/': {
@@ -386,6 +405,7 @@ const AuthTicketsRouteWithChildren = AuthTicketsRoute._addFileChildren(
 )
 
 interface AuthRouteChildren {
+  AuthBoostsRoute: typeof AuthBoostsRoute
   AuthDashboardRoute: typeof AuthDashboardRoute
   AuthProfileRoute: typeof AuthProfileRoute
   AuthSettingsRoute: typeof AuthSettingsRoute
@@ -396,6 +416,7 @@ interface AuthRouteChildren {
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthBoostsRoute: AuthBoostsRoute,
   AuthDashboardRoute: AuthDashboardRoute,
   AuthProfileRoute: AuthProfileRoute,
   AuthSettingsRoute: AuthSettingsRoute,

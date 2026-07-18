@@ -12,6 +12,7 @@ public class GetSquadBuilderQueryHandler(
     IUserRepository userRepository,
     IPlayerInventoryRepository inventoryRepository,
     IPlayerBuildProofRepository proofRepository,
+    IPlayerBoostRequestRepository boostRepository,
     IItemCacheService itemCache,
     IPlayerStatsSnapshotRepository snapshotRepository
 ) : IRequestHandler<GetSquadBuilderQuery, Result<SquadBuilderDto>>
@@ -34,7 +35,7 @@ public class GetSquadBuilderQueryHandler(
             .ToList();
 
         var enriched = await SquadMemberEnricher.ComputeAsync(
-            allUsers, inventoryRepository, proofRepository, itemCache, snapshotRepository, cancellationToken);
+            allUsers, inventoryRepository, proofRepository, boostRepository, itemCache, snapshotRepository, cancellationToken);
 
         BuilderFighterDto ToFighter(User u) =>
             new(u.Id, u.Username, u.GameNickname, u.DiscordAvatarUrl, enriched[u.Id].Flags, enriched[u.Id].Kd);

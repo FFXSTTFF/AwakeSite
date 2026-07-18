@@ -17,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PlayerStatsSnapshot> PlayerStatsSnapshots => Set<PlayerStatsSnapshot>();
     public DbSet<PlayerInventoryItem> PlayerInventoryItems => Set<PlayerInventoryItem>();
     public DbSet<PlayerBuildProof> PlayerBuildProofs => Set<PlayerBuildProof>();
+    public DbSet<PlayerBoostRequest> PlayerBoostRequests => Set<PlayerBoostRequest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -34,6 +35,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.Property(x => x.ContentType).HasMaxLength(64);
             e.HasIndex(x => new { x.UserId, x.BuildType }).IsUnique();
+            e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PlayerBoostRequest>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.BoostType }).IsUnique();
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

@@ -1,4 +1,5 @@
 using Awake.Application.Features.Inventory.Dtos;
+using Awake.Domain.Enums;
 
 namespace Awake.Application.Features.Squads.Queries.GetSquads;
 
@@ -9,7 +10,8 @@ public record SquadMemberDto(
     bool IsLeader,
     DateTime JoinedAt,
     PlayerFlagsDto Flags,
-    double? Kd);
+    double? Kd,
+    IReadOnlyList<BoostType> BoostTypes);
 
 public record SquadDto(
     Guid Id,

@@ -13,17 +13,20 @@ public class GetSquadsQueryHandlerTests
     private readonly Mock<ISquadRepository> _squads = new();
     private readonly Mock<IPlayerInventoryRepository> _inventory = new();
     private readonly Mock<IPlayerBuildProofRepository> _proofs = new();
+    private readonly Mock<IPlayerBoostRequestRepository> _boosts = new();
     private readonly Mock<IItemCacheService> _cache = new();
     private readonly Mock<IPlayerStatsSnapshotRepository> _snapshots = new();
 
     private GetSquadsQueryHandler BuildHandler() => new(
-        _squads.Object, _inventory.Object, _proofs.Object, _cache.Object, _snapshots.Object);
+        _squads.Object, _inventory.Object, _proofs.Object, _boosts.Object, _cache.Object, _snapshots.Object);
 
     private void SetupEmptyAux()
     {
         _inventory.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
                   .ReturnsAsync([]);
         _proofs.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync([]);
+        _boosts.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync([]);
         _snapshots.Setup(r => r.GetByNicknamesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
                   .ReturnsAsync([]);
@@ -42,6 +45,8 @@ public class GetSquadsQueryHandlerTests
         _inventory.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
                   .ReturnsAsync([new PlayerInventoryItem { UserId = user.Id, ItemId = "skif5" }]);
         _proofs.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync([]);
+        _boosts.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync([]);
         _cache.Setup(c => c.GetById("skif5"))
               .Returns(new ItemDto("skif5", "armor/combined", "Скиф-5", "i.png", "RANK_MASTER"));

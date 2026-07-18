@@ -10,6 +10,7 @@ import {
   Shield,
   UserCircle,
   Users,
+  Zap,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { UserRank } from '@/types/api'
@@ -82,6 +83,16 @@ export function MobileTabBar() {
               </div>
             </div>
             <nav className="space-y-1">
+              {isMemberPlus && (
+                <Link
+                  to="/boosts"
+                  onClick={() => setMoreOpen(false)}
+                  className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <Zap size={16} />
+                  {t('nav.boosts')}
+                </Link>
+              )}
               <Link
                 to="/settings"
                 onClick={() => setMoreOpen(false)}
