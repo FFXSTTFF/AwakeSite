@@ -127,7 +127,7 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
                 nickname={leader.gameNickname ?? leader.username}
                 flags={leader.flags}
                 kd={leader.kd}
-                boosts={leader.boostTypes}
+                boosts={leader.boosts}
               >
                 <div className="flex items-center gap-2">
                   <Crown size={12} className="shrink-0 text-yellow-400" />
@@ -143,7 +143,7 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
                 nickname={m.gameNickname ?? m.username}
                 flags={m.flags}
                 kd={m.kd}
-                boosts={m.boostTypes}
+                boosts={m.boosts}
               >
                 <div className="flex items-center gap-2 pl-5">
                   <span className="truncate text-sm text-muted-foreground">

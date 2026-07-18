@@ -63,7 +63,7 @@ function PlayerPage() {
           <CardContent className="pt-5 pb-5">
             <h2 className="text-base font-semibold text-foreground">{t('boosts.myTitle')}</h2>
             <div className="mt-4">
-              <BoostChips selected={profile.boosts} />
+              <BoostChips items={profile.boosts} />
             </div>
           </CardContent>
         </Card>
