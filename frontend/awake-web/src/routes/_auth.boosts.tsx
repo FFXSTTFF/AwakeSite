@@ -1,12 +1,11 @@
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Check, Minus } from 'lucide-react'
 import { boostsApi } from '@/api/boosts'
 import { BoostChips } from '@/components/boosts/BoostChips'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
-import { ALL_BOOST_TYPES, UserRank } from '@/types/api'
+import { UserRank, type BoostItem } from '@/types/api'
 
 export const Route = createFileRoute('/_auth/boosts')({
   component: BoostsPage,
@@ -26,12 +25,16 @@ function BoostsPage() {
   if (isLoading) return <p className="text-muted-foreground">{t('common.loading')}</p>
   if (isError) return <p className="text-destructive">{t('boosts.title')}: {t('auth.errors.networkError')}</p>
 
-  const counts = new Map(
-    ALL_BOOST_TYPES.map((type) => [
-      type,
-      entries.filter((e) => e.boostTypes.includes(type)).length,
-    ]),
-  )
+  // Итого: сколько игроков отметили каждый предмет
+  const totals = new Map<string, { item: BoostItem; count: number }>()
+  for (const entry of entries) {
+    for (const b of entry.boosts) {
+      const existing = totals.get(b.itemId)
+      if (existing) existing.count += 1
+      else totals.set(b.itemId, { item: b, count: 1 })
+    }
+  }
+  const totalRows = [...totals.values()].sort((a, b) => b.count - a.count)
 
   return (
     <div>
@@ -45,74 +48,50 @@ function BoostsPage() {
           </CardContent>
         </Card>
       ) : (
-        <>
-          {/* Десктоп: таблица игроки × типы */}
-          <Card className="hidden md:block">
+        <div className="space-y-4">
+          <Card>
             <CardContent className="pt-5 pb-5">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="py-2 pr-4 text-xs font-medium text-muted-foreground">
-                        {t('boosts.player')}
-                      </th>
-                      {ALL_BOOST_TYPES.map((type) => (
-                        <th key={type} className="px-3 py-2 text-center text-xs font-medium text-muted-foreground">
-                          <div>{t(`boosts.typesShort.${type}`)}</div>
-                          <div className="mt-0.5 font-semibold text-accent">{counts.get(type)}</div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entries.map((entry) => (
-                      <tr key={entry.userId} className="border-b border-border/50 last:border-0">
-                        <td className="py-2.5 pr-4">
-                          <Link
-                            to="/players/$userId"
-                            params={{ userId: entry.userId }}
-                            className="font-medium text-foreground transition-colors hover:text-accent"
-                          >
-                            {entry.gameNickname ?? entry.username}
-                          </Link>
-                        </td>
-                        {ALL_BOOST_TYPES.map((type) => (
-                          <td key={type} className="px-3 py-2.5 text-center">
-                            {entry.boostTypes.includes(type) ? (
-                              <Check size={15} className="inline text-accent" />
-                            ) : (
-                              <Minus size={15} className="inline text-muted-foreground/40" />
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <h2 className="mb-3 text-sm font-semibold text-foreground">{t('boosts.totals')}</h2>
+              <div className="space-y-2">
+                {totalRows.map(({ item, count }) => (
+                  <div key={item.itemId} className="flex items-center gap-3">
+                    {item.icon && (
+                      <img
+                        src={item.icon}
+                        alt=""
+                        className="h-6 w-6 shrink-0 object-contain"
+                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                      />
+                    )}
+                    <span className="flex-1 text-sm text-foreground">{item.name}</span>
+                    <span className="text-xs text-muted-foreground">{t(`boosts.types.${item.boostType}`)}</span>
+                    <span className="w-10 text-right text-sm font-semibold text-accent">× {count}</span>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Мобила: карточки */}
-          <div className="space-y-2 md:hidden">
-            {entries.map((entry) => (
-              <Card key={entry.userId}>
-                <CardContent className="pt-4 pb-4">
-                  <Link
-                    to="/players/$userId"
-                    params={{ userId: entry.userId }}
-                    className="text-sm font-medium text-foreground"
-                  >
-                    {entry.gameNickname ?? entry.username}
-                  </Link>
-                  <div className="mt-2">
-                    <BoostChips selected={entry.boostTypes} short />
+          <Card>
+            <CardContent className="pt-5 pb-5">
+              <h2 className="mb-3 text-sm font-semibold text-foreground">{t('boosts.player')}</h2>
+              <div className="space-y-3">
+                {entries.map((entry) => (
+                  <div key={entry.userId} className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-4">
+                    <Link
+                      to="/players/$userId"
+                      params={{ userId: entry.userId }}
+                      className="w-40 shrink-0 text-sm font-medium text-foreground transition-colors hover:text-accent"
+                    >
+                      {entry.gameNickname ?? entry.username}
+                    </Link>
+                    <BoostChips items={entry.boosts} short />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   )
