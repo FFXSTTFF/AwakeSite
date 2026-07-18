@@ -1,6 +1,7 @@
 using Awake.API.Filters;
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Features.Boosts.Commands.SetMyBoosts;
+using Awake.Application.Features.Boosts.Dtos;
 using Awake.Application.Features.Boosts.Queries.GetBoostsSummary;
 using Awake.Application.Features.Boosts.Queries.GetMyBoosts;
 using Awake.Domain.Enums;
@@ -10,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Awake.API.Controllers;
 
-public record SetBoostsRequest(IReadOnlyList<BoostType> BoostTypes);
+public record SetBoostsRequest(IReadOnlyList<BoostSelectionDto> Selections);
 
 [ApiController]
 [Authorize]
@@ -29,7 +30,7 @@ public class BoostsController(
     public async Task<IActionResult> SetMy(SetBoostsRequest request, CancellationToken ct)
     {
         var result = await sender.Send(
-            new SetMyBoostsCommand(currentUser.UserId, request.BoostTypes), ct);
+            new SetMyBoostsCommand(currentUser.UserId, request.Selections), ct);
         return result.IsSuccess
             ? NoContent()
             : Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);

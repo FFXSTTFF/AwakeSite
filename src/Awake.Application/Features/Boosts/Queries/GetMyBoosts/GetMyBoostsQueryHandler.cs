@@ -1,15 +1,18 @@
+using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
-using Awake.Domain.Enums;
+using Awake.Application.Features.Boosts.Dtos;
 using MediatR;
 
 namespace Awake.Application.Features.Boosts.Queries.GetMyBoosts;
 
 public class GetMyBoostsQueryHandler(
-    IPlayerBoostRequestRepository boostRepository
-) : IRequestHandler<GetMyBoostsQuery, IReadOnlyList<BoostType>>
+    IPlayerBoostRequestRepository boostRepository,
+    IItemCacheService itemCache
+) : IRequestHandler<GetMyBoostsQuery, IReadOnlyList<BoostItemDto>>
 {
-    public async Task<IReadOnlyList<BoostType>> Handle(
+    public async Task<IReadOnlyList<BoostItemDto>> Handle(
         GetMyBoostsQuery request, CancellationToken cancellationToken) =>
         (await boostRepository.GetByUserIdAsync(request.UserId, cancellationToken))
-            .Select(r => r.BoostType).ToList();
+            .Select(r => BoostItemMapper.ToDto(r, itemCache))
+            .ToList();
 }
