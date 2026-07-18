@@ -27,6 +27,8 @@ export interface SquadMemberDto {
   gameNickname: string | null
   isLeader: boolean
   joinedAt: string
+  flags: PlayerFlags
+  kd: number | null
 }
 
 export interface SquadDto {
@@ -184,4 +186,25 @@ export interface InventoryItem {
 export interface PlayerInventory {
   items: InventoryItem[]
   flags: PlayerFlags
+}
+
+export interface BuilderFighter {
+  userId: string
+  username: string
+  gameNickname: string | null
+  avatarUrl: string | null
+  flags: PlayerFlags
+  kd: number | null
+}
+
+export interface BuilderSquad {
+  id: string
+  name: string
+  number: number
+  members: BuilderFighter[]
+}
+
+export interface SquadBuilderData {
+  squads: BuilderSquad[]
+  pool: BuilderFighter[]
 }

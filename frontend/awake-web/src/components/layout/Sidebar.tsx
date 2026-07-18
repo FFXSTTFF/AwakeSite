@@ -35,12 +35,14 @@ export function Sidebar() {
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
 
-  const isColonelPlus = (user?.rank ?? 0) >= UserRank.Colonel
+  const rank = user?.rank ?? 0
+  const isMemberPlus = rank >= UserRank.Member
+  const isColonelPlus = rank >= UserRank.Colonel
 
   const navLinks = [
-    { to: '/dashboard' as const, label: t('nav.dashboard'), icon: LayoutDashboard },
+    ...(isMemberPlus ? [{ to: '/dashboard' as const, label: t('nav.dashboard'), icon: LayoutDashboard }] : []),
     { to: '/profile' as const, label: 'Профиль', icon: UserCircle },
-    { to: '/squads' as const, label: t('nav.squads'), icon: Shield },
+    ...(isMemberPlus ? [{ to: '/squads' as const, label: t('nav.squads'), icon: Shield }] : []),
     { to: '/tickets' as const, label: t('nav.tickets'), icon: FileText },
   ]
 

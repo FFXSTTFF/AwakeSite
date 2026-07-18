@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/authStore'
@@ -13,6 +13,11 @@ import { cn } from '@/lib/utils'
 import { Shield, FileText, Users, ChevronRight, Clock } from 'lucide-react'
 
 export const Route = createFileRoute('/_auth/dashboard')({
+  beforeLoad: () => {
+    if ((useAuthStore.getState().user?.rank ?? 0) < UserRank.Member) {
+      throw redirect({ to: '/tickets' })
+    }
+  },
   component: DashboardPage,
 })
 

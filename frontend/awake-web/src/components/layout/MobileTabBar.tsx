@@ -18,9 +18,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-const TABS = [
+const MEMBER_PLUS_TABS = [
   { to: '/dashboard' as const, label: 'Дашборд', icon: LayoutDashboard },
   { to: '/squads' as const, label: 'Отряды', icon: Shield },
+]
+const BASE_TABS = [
   { to: '/tickets' as const, label: 'Тикеты', icon: FileText },
   { to: '/profile' as const, label: 'Профиль', icon: UserCircle },
 ]
@@ -43,7 +45,10 @@ export function MobileTabBar() {
   const [moreOpen, setMoreOpen] = useState(false)
   const pathname = useRouterState().location.pathname
 
-  const isColonelPlus = (user?.rank ?? 0) >= UserRank.Colonel
+  const rank = user?.rank ?? 0
+  const isMemberPlus = rank >= UserRank.Member
+  const isColonelPlus = rank >= UserRank.Colonel
+  const tabs = isMemberPlus ? [...MEMBER_PLUS_TABS, ...BASE_TABS] : BASE_TABS
 
   function isActive(path: string) {
     return pathname === path || pathname.startsWith(path + '/')
@@ -110,7 +115,7 @@ export function MobileTabBar() {
 
       {/* Панель */}
       <nav className="fixed inset-x-0 bottom-0 z-50 flex h-16 border-t border-border bg-card/95 backdrop-blur-md">
-        {TABS.map((tab) => (
+        {tabs.map((tab) => (
           <Link
             key={tab.to}
             to={tab.to}

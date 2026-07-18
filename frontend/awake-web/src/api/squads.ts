@@ -10,4 +10,6 @@ export const squadsApi = {
     apiClient.delete<void>(`/squads/${squadId}/members/${userId}`),
   setLeader: (squadId: string, userId: string) =>
     apiClient.put<void>(`/squads/${squadId}/leader`, { userId }),
+  rename: (squadId: string, name: string) =>
+    apiClient.put<void>(`/squads/${squadId}/name`, { name }),
 }

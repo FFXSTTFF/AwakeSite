@@ -3,9 +3,11 @@ import { Button } from '@/components/ui/button'
 import { Reveal } from '@/components/Reveal'
 import { discordLoginUrl } from '@/lib/discord'
 import { useAuthStore } from '@/store/authStore'
+import { UserRank } from '@/types/api'
 
 export function HeroSection() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isMemberPlus = useAuthStore((s) => (s.user?.rank ?? 0) >= UserRank.Member)
 
   return (
     // min-h-screen: hero занимает весь первый экран, следующая секция не выглядывает;
@@ -35,7 +37,9 @@ export function HeroSection() {
             <div className="mt-8 flex flex-wrap gap-3">
               {isAuthenticated ? (
                 <Button asChild size="lg">
-                  <Link to="/dashboard">Открыть дашборд</Link>
+                  <Link to={isMemberPlus ? '/dashboard' : '/tickets'}>
+                    {isMemberPlus ? 'Открыть дашборд' : 'Мои тикеты'}
+                  </Link>
                 </Button>
               ) : (
                 <Button asChild size="lg">

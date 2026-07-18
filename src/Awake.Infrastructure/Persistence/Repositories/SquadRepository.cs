@@ -39,9 +39,30 @@ public class SquadRepository(AppDbContext context) : ISquadRepository
         }
     }
 
+    public async Task MoveMemberAsync(Guid? fromSquadId, SquadMember member, CancellationToken ct = default)
+    {
+        if (fromSquadId is not null)
+        {
+            var existing = await context.SquadMembers
+                .FirstOrDefaultAsync(m => m.SquadId == fromSquadId && m.UserId == member.UserId, ct);
+
+            if (existing is not null)
+                context.SquadMembers.Remove(existing);
+        }
+
+        await context.SquadMembers.AddAsync(member, ct);
+        await context.SaveChangesAsync(ct);
+    }
+
     public async Task UpdateMemberAsync(SquadMember member, CancellationToken ct = default)
     {
         context.SquadMembers.Update(member);
+        await context.SaveChangesAsync(ct);
+    }
+
+    public async Task UpdateAsync(Squad squad, CancellationToken ct = default)
+    {
+        context.Squads.Update(squad);
         await context.SaveChangesAsync(ct);
     }
 

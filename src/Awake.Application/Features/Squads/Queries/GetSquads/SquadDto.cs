@@ -1,3 +1,5 @@
+using Awake.Application.Features.Inventory.Dtos;
+
 namespace Awake.Application.Features.Squads.Queries.GetSquads;
 
 public record SquadMemberDto(
@@ -5,7 +7,9 @@ public record SquadMemberDto(
     string Username,
     string? GameNickname,
     bool IsLeader,
-    DateTime JoinedAt);
+    DateTime JoinedAt,
+    PlayerFlagsDto Flags,
+    double? Kd);
 
 public record SquadDto(
     Guid Id,
