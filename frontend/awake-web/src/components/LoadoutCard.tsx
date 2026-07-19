@@ -77,6 +77,27 @@ function LoadoutEditor({ loadout, onClose }: { loadout: Loadout | null; onClose:
     queryFn: inventoryApi.getMy,
   })
 
+  // Инвентарь мог измениться с момента сохранения лоадаута — если сохранённый
+  // предмет исчез из инвентаря, сбрасываем слот, чтобы select и заточка не
+  // расходились с тем, что реально можно сохранить. Санитизация делается один
+  // раз на каждую загрузку инвентаря — прямо во время рендера (без эффекта),
+  // как рекомендует React для "подстройки состояния под новые данные".
+  const [sanitizedFor, setSanitizedFor] = useState<InventoryItem[] | null>(null)
+  if (inventory?.items && inventory.items !== sanitizedFor) {
+    setSanitizedFor(inventory.items)
+    const items = inventory.items
+    const cleaned: Partial<Record<SlotKey, SlotDraft>> = {}
+    for (const key of Object.keys(draft) as SlotKey[]) {
+      const slot = draft[key]
+      if (slot.itemId && !itemsForSlot(items, key).some((i) => i.itemId === slot.itemId)) {
+        cleaned[key] = { itemId: '', upgrade: 0 }
+      }
+    }
+    if (Object.keys(cleaned).length > 0) {
+      setDraft((d) => ({ ...d, ...cleaned }))
+    }
+  }
+
   const save = useMutation({
     mutationFn: inventoryApi.updateLoadout,
     onSuccess: () => {
@@ -146,12 +167,13 @@ function LoadoutEditor({ loadout, onClose }: { loadout: Loadout | null; onClose:
                 aria-label={`Заточка: ${label}`}
                 min={0}
                 max={15}
+                step={1}
                 className="w-20 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-accent/50 disabled:opacity-50"
                 value={draft[key].upgrade}
                 disabled={draft[key].itemId === ''}
                 onChange={(e) =>
                   setSlot(key, {
-                    upgrade: Math.max(0, Math.min(15, Number(e.target.value) || 0)),
+                    upgrade: Math.max(0, Math.min(15, Math.round(Number(e.target.value) || 0))),
                   })
                 }
               />
