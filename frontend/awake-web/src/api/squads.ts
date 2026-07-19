@@ -1,4 +1,4 @@
-import type { SquadDto } from '@/types/api'
+import type { ReserveMember, SquadDto } from '@/types/api'
 import { apiClient } from './client'
 
 export const squadsApi = {
@@ -12,4 +12,5 @@ export const squadsApi = {
     apiClient.put<void>(`/squads/${squadId}/leader`, { userId }),
   rename: (squadId: string, name: string) =>
     apiClient.put<void>(`/squads/${squadId}/name`, { name }),
+  getReserve: () => apiClient.get<ReserveMember[]>('/squads/reserve'),
 }

@@ -40,6 +40,15 @@ export interface SquadDto {
   memberCount: number
 }
 
+export interface ReserveMember {
+  userId: string
+  username: string
+  gameNickname: string | null
+  flags: PlayerFlags
+  kd: number | null
+  boosts: BoostItem[]
+}
+
 export interface UserDto {
   id: string
   username: string
