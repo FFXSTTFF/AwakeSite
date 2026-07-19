@@ -1,5 +1,7 @@
+using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Common.Models;
+using Awake.Application.Features.Boosts;
 using MediatR;
 
 namespace Awake.Application.Features.Players.Queries.GetPlayerProfile;
@@ -9,7 +11,8 @@ public class GetPlayerProfileQueryHandler(
     ISquadRepository squadRepository,
     ITicketRepository ticketRepository,
     IPlayerStatsSnapshotRepository snapshotRepository,
-    IPlayerBoostRequestRepository boostRepository
+    IPlayerBoostRequestRepository boostRepository,
+    IItemCacheService itemCache
 ) : IRequestHandler<GetPlayerProfileQuery, Result<PlayerProfileDto>>
 {
     public async Task<Result<PlayerProfileDto>> Handle(
@@ -40,11 +43,18 @@ public class GetPlayerProfileQueryHandler(
             }
         }
 
-        // Экипировка — из самой свежей заявки с заполненным Loadout
-        var tickets = await ticketRepository.GetByAuthorAsync(user.Id, cancellationToken);
-        var loadout = tickets.FirstOrDefault(t => t.Loadout is not null)?.Loadout;
+        // Экипировка: сохранённая в профиле, иначе — из самой свежей заявки с Loadout
+        var loadout = user.Loadout;
+        if (loadout is null)
+        {
+            var tickets = await ticketRepository.GetByAuthorAsync(user.Id, cancellationToken);
+            loadout = tickets.FirstOrDefault(t => t.Loadout is not null)?.Loadout;
+        }
 
-        var boosts = await boostRepository.GetByUserIdAsync(user.Id, cancellationToken);
+        var boosts = (await boostRepository.GetByUserIdAsync(user.Id, cancellationToken))
+            .OrderBy(b => b.BoostType)
+            .Select(b => BoostItemMapper.ToDto(b, itemCache))
+            .ToList();
 
         return Result<PlayerProfileDto>.Success(new PlayerProfileDto(
             user.Id, user.Username, user.DiscordUsername, user.DiscordAvatarUrl,

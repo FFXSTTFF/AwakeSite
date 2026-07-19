@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Awake.Application.Common.Interfaces;
+using Awake.Application.Features.Items;
 using Awake.Application.Features.Items.Dtos;
+using Awake.Domain.Enums;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -45,9 +47,40 @@ public class ItemSyncHostedService(
 
             if (entries is null) return;
 
-            var items = entries
+            var relevant = entries
                 .Where(e => !string.IsNullOrEmpty(e.Data) &&
-                            (e.Data.StartsWith("/items/weapon/") || e.Data.StartsWith("/items/armor/")))
+                            (e.Data.StartsWith("/items/weapon/") ||
+                             e.Data.StartsWith("/items/armor/") ||
+                             e.Data.StartsWith("/items/supply/")))
+                .ToList();
+
+            // Для supply-предметов вычитываем effect_type из JSON самого предмета.
+            // Ошибка одного предмета не валит синк — предмет остаётся без типа буста.
+            var boostTypes = new Dictionary<string, BoostType?>();
+            var semaphore = new SemaphoreSlim(8);
+            await Task.WhenAll(relevant
+                .Where(e => e.Data.StartsWith("/items/supply/"))
+                .Select(async e =>
+                {
+                    await semaphore.WaitAsync();
+                    try
+                    {
+                        var itemJson = await client.GetStringAsync(IconBase + e.Data);
+                        using var doc = JsonDocument.Parse(itemJson);
+                        var effect = BoostEffectParser.ExtractEffectType(doc.RootElement);
+                        lock (boostTypes) boostTypes[e.Data] = BoostEffectParser.MapToBoostType(effect);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Failed to fetch effect_type for {Item}", e.Data);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                }));
+
+            var items = relevant
                 .Select(e =>
                 {
                     // e.Data = "/items/weapon/sniper_rifle/1r79g.json"
@@ -57,7 +90,8 @@ public class ItemSyncHostedService(
                     var category = string.Join("/", parts[2..^1]);
                     var nameRu = e.Name?.Lines?.GetValueOrDefault("ru") ?? id;
                     var icon = IconBase + e.Icon;
-                    return new ItemDto(id, category, nameRu, icon, e.Color ?? "");
+                    var boost = boostTypes.GetValueOrDefault(e.Data);
+                    return new ItemDto(id, category, nameRu, icon, e.Color ?? "", boost);
                 })
                 .Where(x => !string.IsNullOrEmpty(x.NameRu))
                 .ToList();

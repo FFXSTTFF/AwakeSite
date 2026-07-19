@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { LoadoutCard } from '@/components/LoadoutCard'
 import type { PlayerProfileDto } from '@/types/api'
 
 const RANK_LABELS: Record<number, string> = {
@@ -21,9 +22,10 @@ interface Props {
   onRefresh?: () => void
   refreshing?: boolean
   flagsSlot?: React.ReactNode
+  editable?: boolean
 }
 
-export function PlayerProfileView({ profile, onRefresh, refreshing, flagsSlot }: Props) {
+export function PlayerProfileView({ profile, onRefresh, refreshing, flagsSlot, editable }: Props) {
   const { stats, loadout, squad } = profile
 
   return (
@@ -97,16 +99,7 @@ export function PlayerProfileView({ profile, onRefresh, refreshing, flagsSlot }:
       </Card>
 
       {/* Экипировка */}
-      {loadout && (
-        <Card>
-          <CardHeader><CardTitle>Экипировка</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {loadout.sniper && <LoadoutTile label="Снайперка" slot={loadout.sniper} />}
-            <LoadoutTile label="Основное оружие" slot={loadout.weapon} />
-            <LoadoutTile label="Броня" slot={loadout.armor} />
-          </CardContent>
-        </Card>
-      )}
+      <LoadoutCard loadout={loadout} editable={editable} />
 
       {/* История кланов */}
       {stats && stats.clanHistory.length > 0 && (
@@ -139,18 +132,6 @@ function StatTile({ icon: Icon, label, value }: {
       </div>
       <p className="text-xl font-black tracking-tight text-foreground">{value}</p>
       <p className="mt-0.5 text-xs text-muted-foreground">{label}</p>
-    </div>
-  )
-}
-
-function LoadoutTile({ label, slot }: { label: string; slot: { itemName: string; upgrade: number } }) {
-  return (
-    <div className="rounded-lg border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium text-foreground">
-        {slot.itemName}
-        {slot.upgrade > 0 && <span className="text-accent"> +{slot.upgrade}</span>}
-      </p>
     </div>
   )
 }

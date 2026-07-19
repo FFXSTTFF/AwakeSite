@@ -1,5 +1,7 @@
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
+using Awake.Application.Features.Boosts;
+using Awake.Application.Features.Boosts.Dtos;
 using Awake.Application.Features.Inventory;
 using Awake.Application.Features.Inventory.Dtos;
 using Awake.Application.Features.Items.Dtos;
@@ -10,7 +12,7 @@ namespace Awake.Application.Features.Squads;
 
 public static class SquadMemberEnricher
 {
-    public static async Task<IReadOnlyDictionary<Guid, (PlayerFlagsDto Flags, double? Kd, IReadOnlyList<BoostType> BoostTypes)>> ComputeAsync(
+    public static async Task<IReadOnlyDictionary<Guid, (PlayerFlagsDto Flags, double? Kd, IReadOnlyList<BoostItemDto> Boosts)>> ComputeAsync(
         IReadOnlyList<User> users,
         IPlayerInventoryRepository inventoryRepository,
         IPlayerBuildProofRepository proofRepository,
@@ -52,9 +54,9 @@ public static class SquadMemberEnricher
                     ? snap.KdRatio
                     : null;
 
-            IReadOnlyList<BoostType> userBoosts = boostsByUser[u.Id]
-                .Select(b => b.BoostType)
-                .OrderBy(t => t)
+            IReadOnlyList<BoostItemDto> userBoosts = boostsByUser[u.Id]
+                .OrderBy(b => b.BoostType)
+                .Select(b => BoostItemMapper.ToDto(b, itemCache))
                 .ToList();
 
             return (flags, kd, userBoosts);

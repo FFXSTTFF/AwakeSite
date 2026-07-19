@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Awake.Domain.Entities;
 using Awake.Domain.Enums;
+using Awake.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -41,5 +43,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(x => x.Rank)
             .HasConversion<int>();
+
+        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        builder.Property(x => x.Loadout)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => v == null ? null : JsonSerializer.Serialize(v, jsonOptions),
+                v => v == null ? null : JsonSerializer.Deserialize<Loadout>(v, jsonOptions));
     }
 }

@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { BuildType, PlayerInventory } from '@/types/api'
+import type { BuildType, PlayerInventory, UpdateLoadoutRequest } from '@/types/api'
 
 export const inventoryApi = {
   getMy: (): Promise<PlayerInventory> => apiClient.get('/profile/inventory'),
@@ -21,4 +21,6 @@ export const inventoryApi = {
     apiClient.delete(`/players/${userId}/build-proof/${type}`),
   proofImageBlob: (userId: string, type: BuildType): Promise<Blob> =>
     apiClient.getBlob(`/players/${userId}/build-proof/${type}/image`),
+  updateLoadout: (data: UpdateLoadoutRequest): Promise<void> =>
+    apiClient.put('/profile/loadout', data),
 }

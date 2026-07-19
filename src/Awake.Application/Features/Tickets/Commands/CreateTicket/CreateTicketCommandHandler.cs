@@ -1,6 +1,7 @@
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Common.Models;
+using Awake.Application.Features.Inventory;
 using Awake.Application.Features.Tickets.Dtos;
 using Awake.Domain.Entities;
 using Awake.Domain.Enums;
@@ -14,7 +15,9 @@ public class CreateTicketCommandHandler(
     ICurrentUserService currentUserService,
     IDiscordNotifier discordNotifier,
     INotificationService notificationService,
-    IPlayerDataAggregator playerDataAggregator
+    IPlayerDataAggregator playerDataAggregator,
+    IPlayerInventoryRepository inventoryRepository,
+    IItemCacheService itemCache
 ) : IRequestHandler<CreateTicketCommand, Result<TicketListItemDto>>
 {
     public async Task<Result<TicketListItemDto>> Handle(
@@ -35,6 +38,11 @@ public class CreateTicketCommandHandler(
         };
 
         await ticketRepository.AddAsync(ticket, cancellationToken);
+
+        // Экипировка из заявки сразу попадает в инвентарь игрока
+        if (request.Loadout is not null)
+            await LoadoutInventorySync.AddItemsAsync(
+                inventoryRepository, itemCache, user.Id, request.Loadout, cancellationToken);
 
         await notificationService.CreateForRankAsync(
             UserRank.Officer,
