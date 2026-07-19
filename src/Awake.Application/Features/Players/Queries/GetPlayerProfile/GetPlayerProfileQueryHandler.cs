@@ -40,9 +40,13 @@ public class GetPlayerProfileQueryHandler(
             }
         }
 
-        // Экипировка — из самой свежей заявки с заполненным Loadout
-        var tickets = await ticketRepository.GetByAuthorAsync(user.Id, cancellationToken);
-        var loadout = tickets.FirstOrDefault(t => t.Loadout is not null)?.Loadout;
+        // Экипировка: сохранённая в профиле, иначе — из самой свежей заявки с Loadout
+        var loadout = user.Loadout;
+        if (loadout is null)
+        {
+            var tickets = await ticketRepository.GetByAuthorAsync(user.Id, cancellationToken);
+            loadout = tickets.FirstOrDefault(t => t.Loadout is not null)?.Loadout;
+        }
 
         var boosts = await boostRepository.GetByUserIdAsync(user.Id, cancellationToken);
 

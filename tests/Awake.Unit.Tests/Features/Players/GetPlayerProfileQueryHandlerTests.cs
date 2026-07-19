@@ -98,4 +98,33 @@ public class GetPlayerProfileQueryHandlerTests
         result.Value.Stats.Should().BeNull();
         result.Value.Loadout.Should().BeNull();
     }
+
+    [Fact]
+    public async Task Handle_UserLoadout_PreferredOverTicketLoadout()
+    {
+        var id = Guid.NewGuid();
+        var user = MakeUser(id);
+        user.GameNickname = null;
+        user.Loadout = new Loadout(null,
+            new LoadoutSlot("w2", "Гроза", "icon", 8),
+            new LoadoutSlot("a2", "СЕВА", "icon", 4));
+        _users.Setup(u => u.GetByIdAsync(id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _squads.Setup(s => s.GetMembershipByUserIdAsync(id, It.IsAny<CancellationToken>()))
+               .ReturnsAsync((SquadMember?)null);
+        _tickets.Setup(t => t.GetByAuthorAsync(id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync([new Ticket
+                {
+                    AuthorId = id, GameNickname = "OopsITry",
+                    Loadout = new Loadout(null,
+                        new LoadoutSlot("w1", "АК из заявки", "icon", 0),
+                        new LoadoutSlot("a1", "Броня из заявки", "icon", 0)),
+                }]);
+        _boosts.Setup(b => b.GetByUserIdAsync(id, It.IsAny<CancellationToken>()))
+               .ReturnsAsync([]);
+
+        var result = await BuildHandler().Handle(new GetPlayerProfileQuery(id), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Loadout!.Weapon.ItemName.Should().Be("Гроза");
+    }
 }

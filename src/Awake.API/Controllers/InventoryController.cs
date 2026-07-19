@@ -4,6 +4,7 @@ using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Features.Inventory.Commands.AddInventoryItem;
 using Awake.Application.Features.Inventory.Commands.DeleteBuildProof;
 using Awake.Application.Features.Inventory.Commands.RemoveInventoryItem;
+using Awake.Application.Features.Inventory.Commands.UpdateMyLoadout;
 using Awake.Application.Features.Inventory.Commands.UploadBuildProof;
 using Awake.Application.Features.Inventory.Queries.GetPlayerInventory;
 using Awake.Domain.Enums;
@@ -14,6 +15,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace Awake.API.Controllers;
 
 public record AddItemRequest(string ItemId);
+
+public record UpdateLoadoutRequest(
+    LoadoutSlotRequest? Sniper, LoadoutSlotRequest? Weapon, LoadoutSlotRequest? Armor);
 
 [ApiController]
 [Authorize]
@@ -75,6 +79,16 @@ public class InventoryController(
         return result.IsSuccess
             ? Ok()
             : Problem(detail: result.Error, statusCode: StatusCodes.Status404NotFound);
+    }
+
+    [HttpPut("api/profile/loadout")]
+    public async Task<IActionResult> UpdateLoadout(UpdateLoadoutRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new UpdateMyLoadoutCommand(
+            currentUser.UserId, request.Sniper, request.Weapon, request.Armor), ct);
+        return result.IsSuccess
+            ? Ok()
+            : Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
     }
 
     // ── Чужой инвентарь ─────────────────────────────────────────────────────
