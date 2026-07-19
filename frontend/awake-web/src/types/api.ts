@@ -93,6 +93,17 @@ export interface Loadout {
   armor: LoadoutSlot
 }
 
+export interface LoadoutSlotRequest {
+  itemId: string
+  upgrade: number
+}
+
+export interface UpdateLoadoutRequest {
+  sniper: LoadoutSlotRequest | null
+  weapon: LoadoutSlotRequest
+  armor: LoadoutSlotRequest
+}
+
 export interface ClanEntry {
   clanName: string
   clanTag: string

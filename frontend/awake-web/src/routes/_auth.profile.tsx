@@ -39,7 +39,7 @@ function ProfilePage() {
 
   return (
     <>
-      <PlayerProfileView profile={profile} onRefresh={handleRefresh} refreshing={refreshing} />
+      <PlayerProfileView profile={profile} onRefresh={handleRefresh} refreshing={refreshing} editable />
       <BoostsSection />
       <InventorySection />
     </>
