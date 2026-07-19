@@ -1,5 +1,6 @@
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
+using Awake.Application.Features.Items.Dtos;
 using Awake.Application.Features.Tickets.Commands.CreateTicket;
 using Awake.Application.Features.Tickets.Dtos;
 using Awake.Domain.Entities;
@@ -17,9 +18,12 @@ public class CreateTicketCommandHandlerTests
     private readonly Mock<IDiscordNotifier> _discord = new();
     private readonly Mock<INotificationService> _notifications = new();
     private readonly Mock<IPlayerDataAggregator> _playerData = new();
+    private readonly Mock<IPlayerInventoryRepository> _inventory = new();
+    private readonly Mock<IItemCacheService> _itemCache = new();
 
     private CreateTicketCommandHandler BuildHandler() =>
-        new(_repo.Object, _userRepo.Object, _currentUser.Object, _discord.Object, _notifications.Object, _playerData.Object);
+        new(_repo.Object, _userRepo.Object, _currentUser.Object, _discord.Object,
+            _notifications.Object, _playerData.Object, _inventory.Object, _itemCache.Object);
 
     private void SetupUser(Guid userId, string username)
     {
@@ -83,6 +87,49 @@ public class CreateTicketCommandHandlerTests
         savedTicket!.Loadout.Should().NotBeNull();
         savedTicket.Loadout!.Weapon.ItemName.Should().Be("АК-74М");
         savedTicket.Loadout.Sniper.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Handle_CommandWithLoadout_AddsLoadoutItemsToInventory()
+    {
+        var userId = Guid.NewGuid();
+        SetupUser(userId, "tester");
+        _itemCache.Setup(c => c.GetById("w1"))
+                  .Returns(new ItemDto("w1", "weapon/assault_rifle", "АК-74М", "i.png", ""));
+        _itemCache.Setup(c => c.GetById("a1"))
+                  .Returns(new ItemDto("a1", "armor/combat", "Страж", "i.png", ""));
+        _inventory.Setup(r => r.GetAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                  .ReturnsAsync((PlayerInventoryItem?)null);
+
+        var loadout = new Awake.Domain.ValueObjects.Loadout(
+            Sniper: null,
+            Weapon: new Awake.Domain.ValueObjects.LoadoutSlot("w1", "АК-74М", "i.png"),
+            Armor: new Awake.Domain.ValueObjects.LoadoutSlot("a1", "Страж", "i.png"));
+
+        var command = new CreateTicketCommand("AliceInGame", TicketType.Recruitment, "I want to join.", loadout);
+        var result = await BuildHandler().Handle(command, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _inventory.Verify(r => r.AddAsync(
+            It.Is<PlayerInventoryItem>(i => i.UserId == userId && i.ItemId == "w1"),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _inventory.Verify(r => r.AddAsync(
+            It.Is<PlayerInventoryItem>(i => i.UserId == userId && i.ItemId == "a1"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_NoLoadout_DoesNotTouchInventory()
+    {
+        var userId = Guid.NewGuid();
+        SetupUser(userId, "tester");
+
+        var command = new CreateTicketCommand("AliceInGame", TicketType.Recruitment, "I want to join.", null);
+        var result = await BuildHandler().Handle(command, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _inventory.Verify(r => r.AddAsync(
+            It.IsAny<PlayerInventoryItem>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

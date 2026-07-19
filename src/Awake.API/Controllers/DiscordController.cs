@@ -3,6 +3,7 @@ using System.Text.Json;
 using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Common.Models;
+using Awake.Application.Features.Inventory;
 using Awake.Application.Features.Items.Dtos;
 using Awake.Application.Features.Tickets.Commands.AddTicketComment;
 using Awake.Application.Features.Tickets.Commands.CreateDiscordTicket;
@@ -485,6 +486,17 @@ public class DiscordController(
             new LoadoutSlot(armorItem.Id,  armorItem.NameRu,  armorItem.Icon,  armorRank));
 
         await ticketRepo.UpdateAsync(ticket);
+
+        // Экипировка из заявки сразу попадает в инвентарь (если Discord-аккаунт привязан к пользователю)
+        var linkedUser = await scope.ServiceProvider
+            .GetRequiredService<IUserRepository>()
+            .GetByDiscordUserIdAsync(userId!);
+        if (linkedUser is not null)
+        {
+            await LoadoutInventorySync.AddItemsAsync(
+                scope.ServiceProvider.GetRequiredService<IPlayerInventoryRepository>(),
+                itemCacheService, linkedUser.Id, ticket.Loadout);
+        }
 
         if (ticket.DiscordChannelId is not null)
         {
