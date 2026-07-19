@@ -24,17 +24,18 @@
 
 ### Application
 
-- Команда `UpdateMyLoadoutCommand(Guid UserId, Loadout Loadout)` → `Result` в `Features/Inventory/Commands/UpdateMyLoadout/`.
+- Команда `UpdateMyLoadoutCommand(Guid UserId, LoadoutSlotRequest? Sniper, LoadoutSlotRequest? Weapon, LoadoutSlotRequest? Armor)` → `Result<bool>` в `Features/Inventory/Commands/UpdateMyLoadout/`, где `LoadoutSlotRequest(string ItemId, int Upgrade)` — клиент шлёт только id предмета и заточку.
 - Валидация в хендлере:
   - оружие и броня обязательны (снайперка опциональна);
   - заточка каждого слота в диапазоне 0–15;
   - `ItemId` каждого заполненного слота присутствует в инвентаре игрока (`IPlayerInventoryRepository`);
+  - предмет есть в кэше базы предметов (`IItemCacheService`) — имя и иконку слота сервер резолвит сам, не доверяя клиенту;
   - нарушение → `Result.Failure` с русскоязычным сообщением.
-- Хендлер записывает `user.Loadout` и сохраняет.
+- Хендлер собирает `Loadout` из отрезолвленных слотов, записывает `user.Loadout` и сохраняет.
 
 ### API
 
-- `PUT /api/profile/loadout` в `InventoryController` (там уже живут `/api/profile/inventory` и `/api/profile/build-proof`). Тело — `Loadout` (camelCase JSON). Авторизованный пользователь меняет только свою экипировку.
+- `PUT /api/profile/loadout` в `InventoryController` (там уже живут `/api/profile/inventory` и `/api/profile/build-proof`). Тело — `{ sniper: {itemId, upgrade} | null, weapon: {itemId, upgrade}, armor: {itemId, upgrade} }` (camelCase JSON). Авторизованный пользователь меняет только свою экипировку.
 
 ### Чтение профиля
 
