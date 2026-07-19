@@ -79,7 +79,8 @@
     "myTitle": "Needed boosts",
     "myHint": "Mark the buffs you need for clan wars — officers and clan members will see them",
     "types": { "0": "Damage", "1": "Short damage", "2": "Speed", "3": "Defense" },
-    "typesShort": { "0": "Damage", "1": "Short dmg", "2": "Speed", "3": "Defense" },
+    "searchPlaceholder": "Find an item…",
+    "totals": "Total needed",
     "player": "Player",
     "empty": "Nobody has marked needed boosts yet",
     "emptyHint": "You can mark yours on your profile page"

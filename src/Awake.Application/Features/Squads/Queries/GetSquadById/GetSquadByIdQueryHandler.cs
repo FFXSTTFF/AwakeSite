@@ -42,7 +42,7 @@ public class GetSquadByIdQueryHandler(
                     m.JoinedAt,
                     enriched[m.UserId].Flags,
                     enriched[m.UserId].Kd,
-                    enriched[m.UserId].BoostTypes))
+                    enriched[m.UserId].Boosts))
                 .ToList(),
             squad.Members.Count);
     }

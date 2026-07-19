@@ -29,7 +29,7 @@ export interface SquadMemberDto {
   joinedAt: string
   flags: PlayerFlags
   kd: number | null
-  boostTypes: BoostType[]
+  boosts: BoostItem[]
 }
 
 export interface SquadDto {
@@ -154,7 +154,7 @@ export interface PlayerProfileDto {
   squad: PlayerSquadDto | null
   stats: PlayerStatsDto | null
   loadout: Loadout | null
-  boosts: BoostType[]
+  boosts: BoostItem[]
 }
 
 export interface TicketDetailDto extends TicketListItemDto {
@@ -194,11 +194,23 @@ export const ALL_BOOST_TYPES: readonly BoostType[] = [
   BoostType.Defense,
 ]
 
+export interface BoostItem {
+  boostType: BoostType
+  itemId: string
+  name: string
+  icon: string | null
+}
+
+export interface BoostSelection {
+  boostType: BoostType
+  itemId: string
+}
+
 export interface BoostSummaryEntry {
   userId: string
   username: string
   gameNickname: string | null
-  boostTypes: BoostType[]
+  boosts: BoostItem[]
 }
 
 export interface PlayerFlags {

@@ -1,4 +1,5 @@
 using Awake.Application.Common.Interfaces;
+using Awake.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,8 +14,12 @@ public class ItemsController(IItemCacheService cache) : ControllerBase
     public IActionResult Search(
         [FromQuery] string q = "",
         [FromQuery] string? category = null,
-        [FromQuery] string? exclude = null)
+        [FromQuery] string? exclude = null,
+        [FromQuery] BoostType? boostType = null)
     {
+        if (boostType is not null)
+            return Ok(cache.SearchBoosts(q, boostType.Value));
+
         if (q.Length < 2 && string.IsNullOrEmpty(category))
             return Ok(Array.Empty<object>());
 

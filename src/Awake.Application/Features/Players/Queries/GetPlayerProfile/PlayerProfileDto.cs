@@ -1,3 +1,4 @@
+using Awake.Application.Features.Boosts.Dtos;
 using Awake.Domain.Enums;
 using Awake.Domain.ValueObjects;
 
@@ -21,4 +22,4 @@ public record PlayerProfileDto(
     PlayerSquadDto? Squad,
     PlayerStatsDto? Stats,
     Loadout? Loadout,
-    IReadOnlyList<BoostType> Boosts);
+    IReadOnlyList<BoostItemDto> Boosts);

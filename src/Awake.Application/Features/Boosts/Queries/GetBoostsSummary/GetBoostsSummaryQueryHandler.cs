@@ -1,10 +1,12 @@
+using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using MediatR;
 
 namespace Awake.Application.Features.Boosts.Queries.GetBoostsSummary;
 
 public class GetBoostsSummaryQueryHandler(
-    IPlayerBoostRequestRepository boostRepository
+    IPlayerBoostRequestRepository boostRepository,
+    IItemCacheService itemCache
 ) : IRequestHandler<GetBoostsSummaryQuery, IReadOnlyList<BoostSummaryEntryDto>>
 {
     public async Task<IReadOnlyList<BoostSummaryEntryDto>> Handle(
@@ -20,9 +22,11 @@ public class GetBoostsSummaryQueryHandler(
                     g.Key,
                     user.Username,
                     user.GameNickname,
-                    g.Select(r => r.BoostType).OrderBy(t => t).ToList());
+                    g.OrderBy(r => r.BoostType)
+                     .Select(r => BoostItemMapper.ToDto(r, itemCache))
+                     .ToList());
             })
-            .OrderByDescending(e => e.BoostTypes.Count)
+            .OrderByDescending(e => e.Boosts.Count)
             .ThenBy(e => e.GameNickname ?? e.Username, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
