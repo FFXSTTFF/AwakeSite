@@ -41,6 +41,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         builder.Entity<PlayerBoostRequest>(e =>
         {
+            e.Property(x => x.ItemId).HasMaxLength(64);
             e.HasIndex(x => new { x.UserId, x.BoostType }).IsUnique();
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);

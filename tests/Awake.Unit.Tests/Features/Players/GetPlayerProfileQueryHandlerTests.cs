@@ -1,3 +1,4 @@
+using Awake.Application.Common.Interfaces;
 using Awake.Application.Common.Interfaces.Repositories;
 using Awake.Application.Features.Players.Queries.GetPlayerProfile;
 using Awake.Domain.Entities;
@@ -15,9 +16,10 @@ public class GetPlayerProfileQueryHandlerTests
     private readonly Mock<ITicketRepository> _tickets = new();
     private readonly Mock<IPlayerStatsSnapshotRepository> _snapshots = new();
     private readonly Mock<IPlayerBoostRequestRepository> _boosts = new();
+    private readonly Mock<IItemCacheService> _cache = new();
 
     private GetPlayerProfileQueryHandler BuildHandler() =>
-        new(_users.Object, _squads.Object, _tickets.Object, _snapshots.Object, _boosts.Object);
+        new(_users.Object, _squads.Object, _tickets.Object, _snapshots.Object, _boosts.Object, _cache.Object);
 
     private static User MakeUser(Guid id) => new()
     {

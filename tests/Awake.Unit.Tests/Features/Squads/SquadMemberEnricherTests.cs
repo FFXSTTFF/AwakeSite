@@ -74,13 +74,30 @@ public class SquadMemberEnricherTests
         SetupEmpty();
         _boosts.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync([
-                   new PlayerBoostRequest { UserId = user.Id, BoostType = BoostType.Defense },
-                   new PlayerBoostRequest { UserId = user.Id, BoostType = BoostType.Damage },
+                   new PlayerBoostRequest { UserId = user.Id, BoostType = BoostType.Defense, ItemId = "astr" },
+                   new PlayerBoostRequest { UserId = user.Id, BoostType = BoostType.Damage, ItemId = "olivie" },
                ]);
 
         var result = await SquadMemberEnricher.ComputeAsync(
             [user], _inventory.Object, _proofs.Object, _boosts.Object, _cache.Object, _snapshots.Object, CancellationToken.None);
 
-        result[user.Id].BoostTypes.Should().Equal(BoostType.Damage, BoostType.Defense); // отсортировано
+        result[user.Id].Boosts.Select(b => b.BoostType).Should().Equal(BoostType.Damage, BoostType.Defense); // отсортировано
+        result[user.Id].Boosts[0].Name.Should().Be("olivie"); // кэш пуст — фолбэк на itemId
+    }
+
+    [Fact]
+    public async Task ComputeAsync_BoostsIsolatedBetweenUsers()
+    {
+        var u1 = new User { Username = "u1", Rank = UserRank.Member };
+        var u2 = new User { Username = "u2", Rank = UserRank.Member };
+        SetupEmpty();
+        _boosts.Setup(r => r.GetByUserIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync([new PlayerBoostRequest { UserId = u1.Id, BoostType = BoostType.Speed, ItemId = "x" }]);
+
+        var result = await SquadMemberEnricher.ComputeAsync(
+            [u1, u2], _inventory.Object, _proofs.Object, _boosts.Object, _cache.Object, _snapshots.Object, CancellationToken.None);
+
+        result[u1.Id].Boosts.Should().HaveCount(1);
+        result[u2.Id].Boosts.Should().BeEmpty();
     }
 }
