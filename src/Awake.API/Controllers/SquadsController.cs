@@ -6,6 +6,7 @@ using Awake.Application.Features.Squads.Commands.RenameSquad;
 using Awake.Application.Features.Squads.Commands.SetLeader;
 using Awake.Application.Features.Squads.Queries.GetSquadBuilder;
 using Awake.Application.Features.Squads.Queries.GetSquadById;
+using Awake.Application.Features.Squads.Queries.GetSquadReserve;
 using Awake.Application.Features.Squads.Queries.GetSquads;
 using Awake.Domain.Enums;
 using MediatR;
@@ -29,6 +30,14 @@ public class SquadsController(ISender sender) : ControllerBase
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         var result = await sender.Send(new GetSquadsQuery(), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("reserve")]
+    [RankAuthorize(UserRank.Member)]
+    public async Task<IActionResult> GetReserve(CancellationToken ct)
+    {
+        var result = await sender.Send(new GetSquadReserveQuery(), ct);
         return Ok(result);
     }
 

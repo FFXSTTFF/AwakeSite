@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { squadsApi } from '@/api/squads'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ReserveCard } from '@/components/squads/ReserveCard'
 import { SquadCard } from '@/components/squads/SquadCard'
 import { useAuthStore } from '@/store/authStore'
 import { UserRank } from '@/types/api'
@@ -51,6 +52,7 @@ function SquadsPage() {
         {squads?.map((squad) => (
           <SquadCard key={squad.id} squad={squad} canRename={rank >= UserRank.Officer} />
         ))}
+        <ReserveCard />
       </div>
       {!squads?.length && (
         <div className="rounded-xl border border-border bg-card py-16 text-center">

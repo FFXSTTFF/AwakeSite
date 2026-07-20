@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { squadsApi } from '@/api/squads'
@@ -67,9 +67,17 @@ function SquadDetailPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {member.isLeader && <Crown size={13} className="text-yellow-400 shrink-0" />}
-                        <span className={member.isLeader ? 'text-foreground font-medium' : 'text-foreground'}>
+                        <Link
+                          to="/players/$userId"
+                          params={{ userId: member.userId }}
+                          className={
+                            member.isLeader
+                              ? 'text-foreground font-medium transition-colors hover:text-accent'
+                              : 'text-foreground transition-colors hover:text-accent'
+                          }
+                        >
                           {member.username}
-                        </span>
+                        </Link>
                         {member.gameNickname && (
                           <span className="text-muted-foreground text-sm">({member.gameNickname})</span>
                         )}
