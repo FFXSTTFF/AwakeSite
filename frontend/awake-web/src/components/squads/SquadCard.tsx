@@ -1,5 +1,5 @@
 import { useRef, useState, type MouseEvent } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Crown, Pencil } from 'lucide-react'
@@ -12,6 +12,7 @@ import type { SquadDto } from '@/types/api'
 
 export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: boolean }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(squad.name)
@@ -56,7 +57,15 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
   }
 
   return (
-    <Link to="/squads/$squadId" params={{ squadId: squad.id }} className="group block">
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => navigate({ to: '/squads/$squadId', params: { squadId: squad.id } })}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') navigate({ to: '/squads/$squadId', params: { squadId: squad.id } })
+      }}
+      className="group block cursor-pointer"
+    >
       <Card className="h-full transition-all duration-200 group-hover:border-accent/30 group-hover:shadow-[0_0_20px_rgba(61,220,132,0.06)]">
         <CardContent className="pt-5 pb-5">
           {/* Header */}
@@ -131,9 +140,14 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
               >
                 <div className="flex items-center gap-2">
                   <Crown size={12} className="shrink-0 text-yellow-400" />
-                  <span className="truncate text-sm font-medium text-foreground">
+                  <Link
+                    to="/players/$userId"
+                    params={{ userId: leader.userId }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="truncate text-sm font-medium text-foreground transition-colors hover:text-accent"
+                  >
                     {leader.gameNickname ?? leader.username}
-                  </span>
+                  </Link>
                 </div>
               </MemberHoverInfo>
             )}
@@ -146,9 +160,14 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
                 boosts={m.boosts}
               >
                 <div className="flex items-center gap-2 pl-5">
-                  <span className="truncate text-sm text-muted-foreground">
+                  <Link
+                    to="/players/$userId"
+                    params={{ userId: m.userId }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="truncate text-sm text-muted-foreground transition-colors hover:text-accent"
+                  >
                     {m.gameNickname ?? m.username}
-                  </span>
+                  </Link>
                 </div>
               </MemberHoverInfo>
             ))}
@@ -163,6 +182,6 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
           </div>
         </CardContent>
       </Card>
-    </Link>
+    </div>
   )
 }
