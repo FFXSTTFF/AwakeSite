@@ -99,6 +99,7 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
                   <button
                     type="button"
                     onClick={startEdit}
+                    onKeyDown={(e) => e.stopPropagation()}
                     aria-label="Переименовать отряд"
                     className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                   >
@@ -144,6 +145,7 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
                     to="/players/$userId"
                     params={{ userId: leader.userId }}
                     onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
                     className="truncate text-sm font-medium text-foreground transition-colors hover:text-accent"
                   >
                     {leader.gameNickname ?? leader.username}
@@ -164,6 +166,7 @@ export function SquadCard({ squad, canRename }: { squad: SquadDto; canRename: bo
                     to="/players/$userId"
                     params={{ userId: m.userId }}
                     onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
                     className="truncate text-sm text-muted-foreground transition-colors hover:text-accent"
                   >
                     {m.gameNickname ?? m.username}
